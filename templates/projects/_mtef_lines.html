@@ -1,0 +1,27 @@
+{% load outputs nepali_date %}
+<div class="overflow-x-auto"><table class="w-full text-sm">
+  <thead class="bg-slate-50 text-xs text-slate-500"><tr>
+    <th class="px-4 py-2 text-left font-medium min-w-[16rem]">आयोजना</th><th class="px-3 py-2 text-left font-medium">कोड</th>
+    <th class="px-3 py-2 text-right font-medium">लागत / खर्च</th>
+    {% for y in plan.years %}<th class="px-3 py-2 text-right font-medium" style="min-width:8rem">{{ y }}</th>{% endfor %}
+    <th class="px-3 py-2 text-right font-medium">जम्मा</th>{% if can %}<th class="px-2 py-2 font-medium text-center">हटाउने</th>{% endif %}</tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for r in rows %}{% with b=r.b ln=r.ln %}
+  <tr>
+    <td class="px-4 py-2"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="font-medium text-slate-800 hover:text-brand-700">{{ b.name }}</a>
+      <div class="text-[11px] text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name }}{% endif %}{% if b.sector %} · {{ b.sector.name }}{% endif %}{% if ln.note %} · {{ ln.note }}{% endif %}{% if r.progress is not None %} · प्रगति {{ r.progress|to_nepali_number }}%{% endif %}</div></td>
+    <td class="px-3 py-2 text-[11px] whitespace-nowrap">{% if b.priority %}<span class="font-semibold">{{ b.priority }}</span>{% endif %}{% if b.sdg %} SDG{{ b.sdg }}{% endif %}{% if not b.coded %} <span class="text-amber-600" title="कोड अधुरो">⚠</span>{% endif %}<div class="text-slate-400">{% if b.score is not None %}अङ्क {{ b.score|floatformat:0 }}{% endif %}</div></td>
+    <td class="px-3 py-2 text-right text-xs whitespace-nowrap">{{ b.cost|money:0 }}{% if r.spent %}<div class="text-emerald-700">खर्च {{ r.spent|money:0 }}</div>{% endif %}{% if r.contract %}<div class="text-slate-400">सम्झौता {{ r.contract|money:0 }}</div>{% endif %}</td>
+    {% if can %}
+    <td class="px-2 py-2"><input name="l{{ ln.id }}_y1" value="{{ ln.y1|floatformat:0 }}" class="form-input text-right !py-1"></td>
+    <td class="px-2 py-2"><input name="l{{ ln.id }}_y2" value="{{ ln.y2|floatformat:0 }}" class="form-input text-right !py-1"></td>
+    <td class="px-2 py-2"><input name="l{{ ln.id }}_y3" value="{{ ln.y3|floatformat:0 }}" class="form-input text-right !py-1"></td>
+    {% else %}
+    <td class="px-3 py-2 text-right">{{ ln.y1|money:0 }}</td><td class="px-3 py-2 text-right">{{ ln.y2|money:0 }}</td><td class="px-3 py-2 text-right">{{ ln.y3|money:0 }}</td>
+    {% endif %}
+    <td class="px-3 py-2 text-right font-semibold">{{ ln.total|money:0 }}</td>
+    {% if can %}<td class="px-2 py-2 text-center"><input type="checkbox" name="rm_{{ ln.id }}" value="1"></td>{% endif %}
+  </tr>{% endwith %}
+  {% empty %}<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 text-sm">छैन।</td></tr>{% endfor %}
+  </tbody>
+</table></div>

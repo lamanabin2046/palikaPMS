@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}प्रस्ताव आयात{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-box-archive"></i> आयोजना बैंक</p>
+      <h1 class="text-xl font-bold text-slate-800">Excel बाट प्रस्ताव आयात</h1>
+      <p class="text-sm text-slate-500">वडा भेला / बस्ती भेलाका सबै प्रस्ताव एकैपटक — एउटा पनि पङ्क्ति गलत भए कुनै पनि दर्ता हुँदैन।</p></div>
+    <a href="{% url 'bank_list' %}" class="btn-secondary"><i class="fas fa-arrow-left"></i> आयोजना बैंक</a>
+  </div>
+  {% if errors %}<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 space-y-0.5 max-h-72 overflow-y-auto">{% for e in errors %}<p class="text-sm text-rose-700">• {{ e }}</p>{% endfor %}</div>{% endif %}
+  <form method="post" enctype="multipart/form-data" class="card p-5 space-y-4">{% csrf_token %}
+    <p class="text-sm">१. <a href="?template=1" class="text-brand-700 font-semibold"><i class="fas fa-download"></i> नमुना Excel डाउनलोड गर्नुहोस्</a> र त्यही स्तम्भमा भर्नुहोस्:</p>
+    <p class="text-xs text-slate-500">{{ cols|join:" · " }}</p>
+    <p class="text-xs text-slate-500">वडा: अङ्क (४ वा ४); क्षेत्र: सेटिङमा भएकै नाम; प्रकृति: नयाँ / स्तरोन्नति / मर्मत सम्भार / क्रमागत / निरन्तर (खाली = नयाँ); अवधि: १–५ वर्ष।</p>
+    <div><label class="form-label">२. भरिएको फाइल (.xlsx)</label><input type="file" name="file" accept=".xlsx" class="form-input" required></div>
+    <button class="btn-primary"><i class="fas fa-file-import"></i> आयात गर्नुहोस्</button>
+  </form>
+</div>
+{% endblock %}

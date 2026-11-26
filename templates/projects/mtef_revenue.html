@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}स्रोत अनुमान तथा बजेट सीमा{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-5">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">स्रोत अनुमान तथा बजेट सीमा</h1>
+      <p class="text-sm text-slate-500">तर्जुमा चक्र चरण १ · MTEF आ.व. {{ plan }} · आम्दानी अनुमान → चालु खर्च घटाई पुँजीगत सीमा → वडा र पालिका स्तरीय सीमा</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'plan_cycle' %}" class="btn-secondary"><i class="fas fa-rotate"></i> तर्जुमा चक्र</a>
+      <a href="{% url 'mtef_plan' plan.id %}" class="btn-secondary"><i class="fas fa-layer-group"></i> MTEF</a>
+    </div>
+  </div>
+
+  {% if not can %}<div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">यो MTEF “{{ plan.get_status_display }}” अवस्थामा छ — स्रोत अनुमान हेर्न मात्र मिल्छ।</div>{% endif %}
+
+  {# ---------- सारांश ---------- #}
+  <div class="grid gap-4" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="rounded-xl p-4 text-white" style="background:#1b2b5c">
+      <p class="text-xs opacity-80">कुल अनुमानित स्रोत (आ.व. {{ plan.years.0 }})</p>
+      <p class="text-2xl font-bold mt-1">रु. {{ total.y1|money:0 }}</p>
+      <p class="text-xs opacity-80 mt-1">{% if growth is not None %}चालु वर्षभन्दा {% if growth >= 0 %}+{% endif %}{{ growth|to_nepali_number }}%{% else %}चालु वर्षको संशोधित अनुमान राख्नुहोस्{% endif %}</p>
+    </div>
+    {% for g in groups %}
+    <div class="card p-4"><p class="text-xs text-slate-500">{{ g.label }}</p><p class="text-xl font-bold text-slate-800 mt-1">रु. {{ g.sum.y1|money:0 }}</p></div>
+    {% endfor %}
+  </div>
+
+  {# ---------- अनुमान तालिका ---------- #}
+  <form method="post" class="card overflow-hidden" id="forecast">{% csrf_token %}<input type="hidden" name="act" value="forecast">
+    <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+      <p class="font-semibold text-slate-700">१. स्रोतअनुसार अनुमान <span class="text-xs font-normal text-slate-500">(रु.)</span></p>
+      {% if can %}<button class="btn-chip-brand"><i class="fas fa-floppy-disk"></i> सुरक्षित</button>{% endif %}
+    </div>
+    <div class="px-5 py-3 border-b border-slate-100 text-sm flex flex-wrap items-center gap-2">
+      <label for="resource_ref" class="text-slate-600">स्रोत अनुमान तथा बजेट सीमा निर्धारण समितिको निर्णय:</label>
+      {% if can %}<input id="resource_ref" name="resource_ref" value="{{ plan.resource_ref }}" class="form-input !py-1" style="max-width:26rem" placeholder="जस्तै: निर्णय नं. ४, २०८३-११-१५">{% else %}<b>{{ plan.resource_ref|default:"—" }}</b>{% endif %}
+    </div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr>
+        <th class="px-4 py-2 text-left font-medium">स्रोत</th>
+        <th class="px-2 py-2 text-right font-medium">अघिल्लो वर्ष<br>यथार्थ</th>
+        <th class="px-2 py-2 text-right font-medium">चालु वर्ष<br>संशोधित</th>
+        <th class="px-2 py-2 text-right font-medium" style="background:#eef2fb;color:#223a8b">आ.व. {{ plan.years.0 }}<br>बजेट वर्ष</th>
+        <th class="px-2 py-2 text-right font-medium">आ.व. {{ plan.years.1 }}<br>प्रक्षेपण</th>
+        <th class="px-2 py-2 text-right font-medium">आ.व. {{ plan.years.2 }}<br>प्रक्षेपण</th>
+        <th class="px-3 py-2 text-left font-medium">अनुमानको आधार</th>
+      </tr></thead>
+      {% for g in groups %}
+      <tbody class="divide-y divide-slate-100">
+        <tr class="bg-slate-50/70 font-semibold text-slate-700"><td class="px-4 py-2">{{ g.label }}</td>
+          <td class="px-2 py-2 text-right">{{ g.sum.actual|money:0 }}</td><td class="px-2 py-2 text-right">{{ g.sum.revised|money:0 }}</td>
+          <td class="px-2 py-2 text-right" style="background:#eef2fb">{{ g.sum.y1|money:0 }}</td><td class="px-2 py-2 text-right">{{ g.sum.y2|money:0 }}</td><td class="px-2 py-2 text-right">{{ g.sum.y3|money:0 }}</td><td></td></tr>
+        {% for c in g.rows %}
+        <tr><td class="px-4 py-1.5 pl-7 text-slate-700">{{ c.head.name }}</td>
+          {% if can %}
+          <td class="px-1 py-1"><input name="c{{ c.id }}_actual" value="{{ c.actual|floatformat:0 }}" aria-label="{{ c.head.name }} — अघिल्लो वर्ष यथार्थ" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          <td class="px-1 py-1"><input name="c{{ c.id }}_revised" value="{{ c.revised|floatformat:0 }}" aria-label="{{ c.head.name }} — चालु वर्ष संशोधित" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          <td class="px-1 py-1" style="background:#f6f8fd"><input name="c{{ c.id }}_y1" value="{{ c.y1|floatformat:0 }}" aria-label="{{ c.head.name }} — {{ plan.years.0 }}" class="form-input text-right !py-1 font-semibold" style="min-width:7rem"></td>
+          <td class="px-1 py-1"><input name="c{{ c.id }}_y2" value="{{ c.y2|floatformat:0 }}" aria-label="{{ c.head.name }} — {{ plan.years.1 }}" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          <td class="px-1 py-1"><input name="c{{ c.id }}_y3" value="{{ c.y3|floatformat:0 }}" aria-label="{{ c.head.name }} — {{ plan.years.2 }}" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          <td class="px-1 py-1"><input name="c{{ c.id }}_basis" value="{{ c.basis }}" aria-label="{{ c.head.name }} — आधार" class="form-input !py-1" style="min-width:11rem" placeholder="जस्तै: संघको सीमा पत्र"></td>
+          {% else %}
+          <td class="px-2 py-1.5 text-right">{{ c.actual|money:0 }}</td><td class="px-2 py-1.5 text-right">{{ c.revised|money:0 }}</td>
+          <td class="px-2 py-1.5 text-right font-semibold" style="background:#f6f8fd">{{ c.y1|money:0 }}</td><td class="px-2 py-1.5 text-right">{{ c.y2|money:0 }}</td><td class="px-2 py-1.5 text-right">{{ c.y3|money:0 }}</td>
+          <td class="px-3 py-1.5 text-xs text-slate-500">{{ c.basis|default:"—" }}</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% endfor %}
+      <tbody>
+        <tr class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-200"><td class="px-4 py-2">कुल स्रोत</td>
+          <td class="px-2 py-2 text-right">{{ total.actual|money:0 }}</td><td class="px-2 py-2 text-right">{{ total.revised|money:0 }}</td>
+          <td class="px-2 py-2 text-right" style="background:#e3e9f8">{{ total.y1|money:0 }}</td><td class="px-2 py-2 text-right">{{ total.y2|money:0 }}</td><td class="px-2 py-2 text-right">{{ total.y3|money:0 }}</td><td></td></tr>
+        <tr><td class="px-4 py-2 text-slate-700">− चालु खर्च <span class="text-xs text-slate-500">(तलब, भत्ता, कार्यालय सञ्चालन, सामाजिक सुरक्षा)</span></td><td></td><td></td>
+          {% if can %}
+          <td class="px-1 py-1" style="background:#f6f8fd"><input name="rec_y1" value="{{ plan.recurrent_y1|floatformat:0 }}" aria-label="चालु खर्च {{ plan.years.0 }}" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          <td class="px-1 py-1"><input name="rec_y2" value="{{ plan.recurrent_y2|floatformat:0 }}" aria-label="चालु खर्च {{ plan.years.1 }}" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          <td class="px-1 py-1"><input name="rec_y3" value="{{ plan.recurrent_y3|floatformat:0 }}" aria-label="चालु खर्च {{ plan.years.2 }}" class="form-input text-right !py-1" style="min-width:7rem"></td>
+          {% else %}
+          <td class="px-2 py-2 text-right" style="background:#f6f8fd">{{ plan.recurrent_y1|money:0 }}</td><td class="px-2 py-2 text-right">{{ plan.recurrent_y2|money:0 }}</td><td class="px-2 py-2 text-right">{{ plan.recurrent_y3|money:0 }}</td>
+          {% endif %}<td></td></tr>
+        <tr class="bg-emerald-50 font-bold text-emerald-900"><td class="px-4 py-2">= पुँजीगत बजेट सीमा (MTEF)</td><td></td><td></td>
+          <td class="px-2 py-2 text-right">{{ t.y1.cap|money:0 }}</td><td class="px-2 py-2 text-right">{{ t.y2.cap|money:0 }}</td><td class="px-2 py-2 text-right">{{ t.y3.cap|money:0 }}</td><td></td></tr>
+      </tbody>
+    </table></div>
+  </form>
+
+  <div class="grid gap-5" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+    {# ---------- सीमाको हिसाब ---------- #}
+    <section class="card p-5 space-y-2.5" aria-labelledby="calc-h">
+      <h2 id="calc-h" class="font-semibold text-slate-700">२. पहिलो वर्षको सीमा <span class="text-xs font-normal text-slate-500">(आ.व. {{ plan.years.0 }})</span></h2>
+      <div class="flex justify-between text-sm"><span class="text-slate-600">पुँजीगत बजेट सीमा</span><b>रु. {{ t.y1.cap|money:0 }}</b></div>
+      <div class="flex justify-between text-sm"><span class="text-slate-600">− क्रमागत / बहुवर्षीय (MTEF प्रतिबद्धता)</span><b class="text-amber-700">रु. {{ t.y1.commitment|money:0 }}</b></div>
+      <div class="flex justify-between items-center rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2"><span class="font-semibold text-emerald-900">नयाँ आयोजनाका लागि</span><b class="text-lg text-emerald-900">रु. {{ fresh|money:0 }}</b></div>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <div class="rounded-lg border border-slate-200 p-3"><p class="text-xs text-slate-500">वडा स्तरीय (वडा सीमाको जोड)</p><p class="font-bold text-slate-800">रु. {{ ward_total|money:0 }}</p></div>
+        <div class="rounded-lg border p-3 {% if palika_share < 0 %}border-rose-200 bg-rose-50{% else %}border-slate-200{% endif %}"><p class="text-xs text-slate-500">पालिका स्तरीय / साझेदारी</p><p class="font-bold {% if palika_share < 0 %}text-rose-700{% else %}text-slate-800{% endif %}">रु. {{ palika_share|money:0 }}</p></div>
+      </div>
+      {% if palika_share < 0 %}<p class="text-xs text-rose-700">वडा सीमाको जोड नयाँ आयोजनाका लागि उपलब्ध रकमभन्दा बढी भयो।</p>{% endif %}
+    </section>
+
+    {# ---------- वडा सीमा ---------- #}
+    <form method="post" class="card overflow-hidden" id="wards" aria-labelledby="ward-h">{% csrf_token %}<input type="hidden" name="act" value="wards">
+      <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+        <h2 id="ward-h" class="font-semibold text-slate-700">३. वडा सीमा <span class="text-xs font-normal text-slate-500">· {{ submitted|to_nepali_number }}/{{ n_wards|to_nepali_number }} वडाले पेश गरे</span></h2>
+        {% if can %}<button class="btn-chip-brand"><i class="fas fa-floppy-disk"></i> सुरक्षित</button>{% endif %}
+      </div>
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">वडा</th><th class="px-2 py-2 text-right font-medium">सीमा (रु.)</th><th class="px-2 py-2 text-right font-medium">प्रस्ताव लागत</th><th class="px-4 py-2 text-left font-medium">अवस्था</th></tr></thead>
+        <tbody class="divide-y divide-slate-100">
+        {% for r in ward_rows %}
+          <tr><th scope="row" class="px-4 py-2 text-left font-medium text-slate-700">वडा {{ r.wc.ward.name }}</th>
+            <td class="px-1 py-1 text-right">{% if can and not r.wc.submitted_at %}<input name="w{{ r.wc.id }}" value="{{ r.wc.amount|floatformat:0 }}" aria-label="वडा {{ r.wc.ward.name }} सीमा" class="form-input text-right !py-1" style="min-width:7rem">{% else %}{{ r.wc.amount|money:0 }}{% endif %}</td>
+            <td class="px-2 py-2 text-right {% if r.over %}text-rose-700 font-semibold{% else %}text-slate-700{% endif %}">{{ r.used|money:0 }}</td>
+            <td class="px-4 py-2">{% if r.wc.submitted_at %}<span class="text-xs rounded-full px-2 py-0.5 bg-emerald-50 text-emerald-700">पेश भयो · {{ r.wc.submitted_at|date:"Y-m-d" }}</span>
+              {% if can %}<button type="button" class="ml-1 text-xs text-slate-500 underline" onclick="this.nextElementSibling.classList.toggle('hidden')">फेरि खोल्ने</button>
+              <span class="hidden"><input form="unlock-{{ r.wc.id }}" name="reason" class="form-input !py-1 !text-xs mt-1" placeholder="कारण" aria-label="फेरि खोल्ने कारण"> <button form="unlock-{{ r.wc.id }}" class="btn-chip-slate !text-xs mt-1">खोल्ने</button></span>{% endif %}
+              {% elif r.over %}<span class="text-xs rounded-full px-2 py-0.5 bg-rose-50 text-rose-700">सीमा नाघेको</span>
+              {% else %}<span class="text-xs rounded-full px-2 py-0.5 bg-amber-50 text-amber-700">पेश बाँकी</span>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+        <tfoot><tr class="bg-slate-50 font-semibold"><td class="px-4 py-2">जम्मा</td><td class="px-2 py-2 text-right">{{ ward_total|money:0 }}</td><td colspan="2"></td></tr></tfoot>
+      </table>
+      {% if can %}<div class="px-4 py-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-sm">
+        <label for="ward_total" class="text-slate-600">सबै वडामा बराबर बाँड्ने: जम्मा रु.</label>
+        <input id="ward_total" form="split-form" name="ward_total" class="form-input !py-1 text-right" style="max-width:10rem" placeholder="७०००००००">
+        <button form="split-form" class="btn-chip-slate">बराबर बाँड्नुहोस्</button>
+      </div>{% endif %}
+    </form>
+  </div>
+  {% if can %}
+  <form method="post" id="split-form">{% csrf_token %}<input type="hidden" name="act" value="split"></form>
+  {% for r in ward_rows %}{% if r.wc.submitted_at %}<form method="post" id="unlock-{{ r.wc.id }}">{% csrf_token %}<input type="hidden" name="act" value="unlock_ward"><input type="hidden" name="wc" value="{{ r.wc.id }}"></form>{% endif %}{% endfor %}
+  {% endif %}
+  <p class="text-xs text-slate-500">वडाले प्राथमिकता सूची पेश गरेपछि त्यो वडाको सीमा र सूची लक हुन्छ; खोल्न कारण चाहिन्छ (गतिविधि लगमा रहन्छ)। स्रोत शीर्षक थप्न / हटाउन: योजना तर्जुमा → सेटिङ।</p>
+</div>
+{% endblock %}

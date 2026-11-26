@@ -1,0 +1,28 @@
+{% load outputs nepali_date %}
+<div class="flex flex-col max-h-[92vh]">
+  <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-100">
+    <div class="min-w-0"><p class="text-xs font-medium text-brand-700"><i class="fas fa-layer-group"></i> आयोजना बैंक → MTEF</p>
+      <h2 class="text-lg font-bold text-slate-800 truncate mt-0.5">{{ b.name }}</h2>
+      <p class="text-xs text-slate-500">{{ b.code }} · लागत रु. {{ b.cost|money:0 }}{% if spent %} · खर्च भइसकेको रु. {{ spent|money:0 }}{% endif %} · {{ b.duration_years|to_nepali_number }} वर्ष</p></div>
+    <button type="button" onclick="closeAppModal()" class="w-9 h-9 shrink-0 rounded-lg text-slate-500 hover:bg-slate-100"><i class="fas fa-xmark text-lg"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+    {% if problems %}<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-1">{% for p in problems %}<p class="text-sm text-amber-800"><i class="fas fa-triangle-exclamation"></i> {{ p }}</p>{% endfor %}
+      {% if can_create %}<a href="{% url 'mtef_list' %}" class="btn-chip-brand mt-2 inline-flex"><i class="fas fa-plus"></i> MTEF बनाउने पेज</a>{% endif %}</div>
+    {% else %}
+    <form id="b2m" hx-post="{% url 'bank_to_mtef' b.id %}" hx-target="#b2m-msg" class="space-y-3">{% csrf_token %}
+      <div><label class="form-label">कुन MTEF मा</label>
+        <select name="plan" class="form-select">{% for x in drafts %}<option value="{{ x.id }}">आ.व. {{ x }} (मस्यौदा)</option>{% endfor %}</select></div>
+      <div class="rounded-xl border border-slate-200 p-3 text-sm">
+        <p class="text-xs text-slate-500 mb-1">सुरुको वर्षगत बाँडफाँड (MTEF पेजमा बदल्न मिल्छ)</p>
+        <div class="grid grid-cols-3 gap-2 text-center">{% for v in phase %}<div class="rounded-lg bg-slate-50 p-2"><p class="text-[11px] text-slate-500">वर्ष {{ forloop.counter|to_nepali_number }}</p><p class="font-semibold">रु. {{ v|money:0 }}</p></div>{% endfor %}</div>
+      </div>
+      <div id="b2m-msg"></div>
+    </form>
+    {% endif %}
+  </div>
+  <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+    <button type="button" onclick="closeAppModal()" class="btn-secondary">बन्द</button>
+    {% if not problems %}<button type="submit" form="b2m" class="btn-primary"><i class="fas fa-layer-group"></i> MTEF मा थप्नुहोस्</button>{% endif %}
+  </div>
+</div>

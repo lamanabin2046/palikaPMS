@@ -68,6 +68,10 @@ class Project(models.Model):
     # क्रमागत योजना: अघिल्लो आ.व. बाट सारिएको भए त्यो आ.व. र त्यतिबेलासम्मको खर्च
     carried_from = models.ForeignKey("FiscalYear", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     spent_before = models.DecimalField("अघिल्ला आ.व. मा खर्च", max_digits=16, decimal_places=2, default=0)
+    # आयोजना बैंकबाट आएको (योजना तर्जुमा) — बैंक बाहिरबाट भए कारण
+    bank_project = models.ForeignKey("BankProject", on_delete=models.SET_NULL, null=True, blank=True, related_name="projects",
+                                     verbose_name="आयोजना बैंक")
+    outside_bank_reason = models.CharField("बैंक बाहिरबाट आएको कारण", max_length=250, blank=True)
     # कामको प्रकार (सडक, भवन …) — भौतिक उपलब्धि (ProjectOutput) भर्दा छानिन्छ
     work_category = models.ForeignKey("WorkCategory", on_delete=models.SET_NULL, null=True, blank=True,
                                       related_name="projects", verbose_name="कामको प्रकार")
@@ -877,3 +881,259 @@ class NotificationLog(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+# ==================== योजना तर्जुमा: आयोजना बैंक, MTEF ====================
+SDG_CHOICES = [(i, f"SDG {i}") for i in range(1, 18)]
+
+class PlanPillar(models.Model):
+    """रणनीतिक स्तम्भ (आवधिक योजना) — जस्तै भौतिक पूर्वाधार, सामाजिक विकास."""
+    name = models.CharField("स्तम्भ", max_length=150)
+    code = models.CharField(max_length=20, blank=True)
+    sort = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort", "id"]
+
+    def __str__(self):
+        return self.name
+
+
+class PlanProgram(models.Model):
+    pillar = models.ForeignKey(PlanPillar, on_delete=models.CASCADE, related_name="programs")
+    name = models.CharField("कार्यक्रम", max_length=200)
+    code = models.CharField(max_length=20, blank=True)
+    sort = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["pillar__sort", "sort", "id"]
+
+    def __str__(self):
+        return self.name
+
+
+class ScoreCriterion(models.Model):
+    AUTO = (("", "हातैले"), ("beneficiaries", "लाभान्वित जनसंख्या"), ("readiness", "तयारी जाँचसूची"),
+            ("cost", "प्रतिव्यक्ति लागत"), ("inclusion", "महिला / सीमान्तकृत अनुपात"), ("continuity", "क्रमागत / निरन्तरता"),
+            ("climate", "जलवायु कोड"))
+    name = models.CharField("आधार", max_length=150)
+    weight = models.PositiveSmallIntegerField("पूर्णाङ्क", default=10)
+    auto = models.CharField("आफैँ सुझाव", max_length=20, choices=AUTO, blank=True, default="")
+    sort = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort", "id"]
+
+
+class ResourceHead(models.Model):
+    """MTEF स्रोत सीमाका शीर्षक — आन्तरिक आय, राजस्व बाँडफाँड, वित्तीय समानीकरण …"""
+    GROUPS = (("internal", "आन्तरिक आय"), ("sharing", "राजस्व बाँडफाँड"), ("transfer", "वित्तीय हस्तान्तरण"), ("other", "अन्य"))
+    name = models.CharField(max_length=150)
+    group = models.CharField("समूह", max_length=10, choices=GROUPS, default="other")
+    sort = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort", "id"]
+
+
+class SectorPlanDefault(models.Model):
+    """क्षेत्रअनुसार सुझाइने कोड (रूपान्तरण र नयाँ प्रस्तावमा)."""
+    sector = models.OneToOneField("Sector", on_delete=models.CASCADE, related_name="plan_default")
+    priority = models.CharField(max_length=2, blank=True)
+    pillar = models.ForeignKey(PlanPillar, on_delete=models.SET_NULL, null=True, blank=True)
+    program = models.ForeignKey(PlanProgram, on_delete=models.SET_NULL, null=True, blank=True)
+    sdg = models.PositiveSmallIntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=10, blank=True)
+    climate = models.CharField(max_length=10, blank=True)
+
+
+class PlanSettings(models.Model):
+    ward_priority = models.BooleanField("वडा प्राथमिकता चरण", default=True)
+    prefix = models.CharField("बैंक नम्बरको अगाडि", max_length=10, default="PB")
+    min_ready_score = models.PositiveSmallIntegerField("तयार घोषणा गर्न न्यूनतम अङ्क", default=0)
+
+    @classmethod
+    def get(cls):
+        return cls.objects.order_by("id").first() or cls.objects.create()
+
+
+class BankProject(models.Model):
+    NATURE = (("new", "नयाँ"), ("upgrade", "स्तरोन्नति"), ("maintenance", "मर्मत सम्भार"), ("continuation", "क्रमागत / निरन्तर"))
+    SOURCE = (("ward", "वडा / बस्ती भेला"), ("section", "पालिका विषयगत शाखा"), ("committee", "विषयगत समिति"),
+              ("mayor", "प्रमुख / उपप्रमुख"), ("executive", "कार्यपालिका"), ("assembly", "सभा"),
+              ("government", "प्रदेश / संघ"), ("other", "अन्य"))
+    PRIORITY = (("P1", "P1 — पहिलो प्राथमिकता"), ("P2", "P2 — दोस्रो प्राथमिकता"))
+    GENDER = (("direct", "प्रत्यक्ष लाभ"), ("indirect", "अप्रत्यक्ष लाभ"), ("neutral", "तटस्थ"))
+    CLIMATE = (("high", "अत्यधिक सान्दर्भिक"), ("relevant", "सान्दर्भिक"), ("neutral", "तटस्थ"))
+    HOLD = (("", "—"), ("rejected", "अस्वीकृत"), ("postponed", "स्थगित"))
+
+    code = models.CharField("बैंक नं.", max_length=30, unique=True)
+    fiscalyear = models.ForeignKey(FiscalYear, on_delete=models.SET_NULL, null=True, blank=True, related_name="bank_projects",
+                                   verbose_name="प्रस्ताव आ.व.")
+    name = models.CharField("आयोजनाको नाम", max_length=250)
+    ward = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True)
+    location = models.CharField("स्थान / टोल", max_length=250, blank=True)
+    sector = models.ForeignKey("Sector", on_delete=models.SET_NULL, null=True, blank=True)
+    subsector = models.ForeignKey("SubSector", on_delete=models.SET_NULL, null=True, blank=True)
+    nature = models.CharField("प्रकृति", max_length=15, choices=NATURE, default="new")
+    source = models.CharField("माग गर्ने", max_length=12, choices=SOURCE, default="ward")
+    requested_by = models.CharField("माग गर्ने बस्ती / संस्था", max_length=200, blank=True)
+    request_ref = models.CharField("माग निर्णय / मिति", max_length=200, blank=True)
+    description = models.TextField("विवरण / भौतिक लक्ष्य", blank=True)
+    need = models.TextField("आवश्यकता / औचित्य", blank=True)
+    households = models.PositiveIntegerField("लाभान्वित घरधुरी", null=True, blank=True)
+    population = models.PositiveIntegerField("लाभान्वित जनसंख्या", null=True, blank=True)
+    women = models.PositiveIntegerField("महिला", null=True, blank=True)
+    marginalized = models.PositiveIntegerField("दलित / सीमान्तकृत", null=True, blank=True)
+    proposed_cost = models.DecimalField("प्रस्तावित लागत", max_digits=16, decimal_places=2, default=0)
+    duration_years = models.PositiveSmallIntegerField("अवधि (वर्ष)", default=1)
+    cost_share_pct = models.DecimalField("जनसहभागिता %", max_digits=5, decimal_places=2, default=0)
+    # वडा प्राथमिकता
+    ward_rank = models.PositiveSmallIntegerField(null=True, blank=True)
+    ward_approved_at = models.DateTimeField(null=True, blank=True)
+    ward_approver = models.CharField(max_length=200, blank=True)
+    # प्राविधिक जाँच
+    dpr = models.BooleanField("DPR / लागत अनुमान", default=False)
+    land = models.BooleanField("जग्गा उपलब्ध", default=False)
+    env = models.BooleanField("वातावरणीय पक्ष ठीक", default=False)
+    feasible = models.BooleanField("प्राविधिक रूपमा सम्भव", default=False)
+    no_duplicate = models.BooleanField("दोहोरो छैन", default=False)
+    tech_cost = models.DecimalField("इन्जिनियरको लागत अनुमान", max_digits=16, decimal_places=2, null=True, blank=True)
+    tech_note = models.TextField(blank=True)
+    tech_by = models.CharField(max_length=200, blank=True)
+    tech_at = models.DateTimeField(null=True, blank=True)
+    # अङ्क र कोड
+    scores = models.JSONField(default=dict, blank=True)
+    score = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    priority = models.CharField(max_length=2, choices=PRIORITY, blank=True)
+    pillar = models.ForeignKey(PlanPillar, on_delete=models.SET_NULL, null=True, blank=True)
+    program = models.ForeignKey(PlanProgram, on_delete=models.SET_NULL, null=True, blank=True)
+    sdg = models.PositiveSmallIntegerField(choices=SDG_CHOICES, null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER, blank=True)
+    climate = models.CharField(max_length=10, choices=CLIMATE, blank=True)
+    scored_by = models.CharField(max_length=200, blank=True)
+    scored_at = models.DateTimeField(null=True, blank=True)
+    # तयार / अस्वीकृत / स्थगित
+    ready_at = models.DateTimeField(null=True, blank=True)
+    ready_ref = models.CharField(max_length=200, blank=True)
+    hold = models.CharField(max_length=10, choices=HOLD, blank=True, default="")
+    hold_reason = models.TextField(blank=True)
+    hold_at = models.DateTimeField(null=True, blank=True)
+    # तर्जुमा चक्रको कुन चरणमा थपिएको (टोल/वडाबाट सामान्य प्रक्रियामा भए खाली) — पछि थपिएको देखाउन
+    entry_step = models.PositiveSmallIntegerField("थपिएको चरण", null=True, blank=True)
+    converted = models.BooleanField("पुरानो योजनाबाट रूपान्तरण", default=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return f"{self.code} {self.name}"
+
+    @property
+    def cost(self):
+        return self.tech_cost if self.tech_cost else self.proposed_cost
+
+    @property
+    def coded(self):
+        return bool(self.priority and self.pillar_id and self.sdg and self.gender and self.climate)
+
+
+class BankDoc(models.Model):
+    KINDS = (("dpr", "DPR / लागत अनुमान"), ("land", "जग्गा प्रमाण"), ("decision", "माग / निर्णय"), ("photo", "फोटो"),
+             ("other", "अन्य"))
+    bank = models.ForeignKey(BankProject, on_delete=models.CASCADE, related_name="docs")
+    kind = models.CharField(max_length=10, choices=KINDS)
+    file = models.FileField(upload_to="bank/")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class MTEFPlan(models.Model):
+    STATUS = (("draft", "मस्यौदा"), ("recommended", "समितिबाट सिफारिस"), ("executive", "कार्यपालिकाबाट स्वीकृत"),
+              ("approved", "सभाबाट पारित"))
+    start_fy = models.ForeignKey(FiscalYear, on_delete=models.PROTECT, related_name="mtef_plans", verbose_name="पहिलो वर्ष")
+    # स्रोत अनुमान तथा बजेट सीमा निर्धारण समिति → बजेट तथा कार्यक्रम तर्जुमा समिति → कार्यपालिका → सभा
+    resource_ref = models.CharField("स्रोत अनुमान समितिको निर्णय", max_length=200, blank=True)
+    committee_ref = models.CharField("बजेट तथा कार्यक्रम तर्जुमा समितिको सिफारिस", max_length=200, blank=True)
+    committee_at = models.DateTimeField(null=True, blank=True)
+    exec_ref = models.CharField("कार्यपालिकाको निर्णय", max_length=200, blank=True)
+    exec_at = models.DateTimeField(null=True, blank=True)
+    y2_name = models.CharField(max_length=20)
+    y3_name = models.CharField(max_length=20)
+    # चालु खर्च (तलब, भत्ता, कार्यालय सञ्चालन, सामाजिक सुरक्षा) — स्रोतबाट घटाएर पुँजीगत बजेट सीमा
+    recurrent_y1 = models.DecimalField("चालु खर्च (पहिलो वर्ष)", max_digits=16, decimal_places=2, default=0)
+    recurrent_y2 = models.DecimalField("चालु खर्च (दोस्रो वर्ष)", max_digits=16, decimal_places=2, default=0)
+    recurrent_y3 = models.DecimalField("चालु खर्च (तेस्रो वर्ष)", max_digits=16, decimal_places=2, default=0)
+    previous = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    status = models.CharField(max_length=12, choices=STATUS, default="draft")
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approver_name = models.CharField(max_length=200, blank=True)
+    approval_ref = models.CharField("निर्णय", max_length=200, blank=True)
+    sent_at = models.DateTimeField("वार्षिक बजेटमा पठाइएको", null=True, blank=True)
+    note = models.TextField(blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-start_fy__name"]
+
+    @property
+    def years(self):
+        return [self.start_fy.name, self.y2_name, self.y3_name]
+
+    def __str__(self):
+        return f"{self.start_fy.name} – {self.y3_name}"
+
+
+class MTEFCeiling(models.Model):
+    plan = models.ForeignKey(MTEFPlan, on_delete=models.CASCADE, related_name="ceilings")
+    head = models.ForeignKey(ResourceHead, on_delete=models.PROTECT)
+    # स्रोत अनुमान: अघिल्लो वर्षको यथार्थ र चालु वर्षको संशोधित अनुमान (तुलनाका लागि) र अनुमानको आधार
+    actual = models.DecimalField("अघिल्लो वर्ष यथार्थ", max_digits=16, decimal_places=2, default=0)
+    revised = models.DecimalField("चालु वर्ष संशोधित अनुमान", max_digits=16, decimal_places=2, default=0)
+    basis = models.CharField("अनुमानको आधार", max_length=150, blank=True)
+    y1 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    y2 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    y3 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+
+    class Meta:
+        unique_together = [("plan", "head")]
+        ordering = ["head__sort", "head_id"]
+
+
+class MTEFLine(models.Model):
+    KINDS = (("commitment", "प्रतिबद्धता"), ("new", "नयाँ चयन"))
+    plan = models.ForeignKey(MTEFPlan, on_delete=models.CASCADE, related_name="lines")
+    bank = models.ForeignKey(BankProject, on_delete=models.PROTECT, related_name="mtef_lines")
+    kind = models.CharField(max_length=12, choices=KINDS, default="new")
+    y1 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    y2 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    y3 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    note = models.CharField(max_length=250, blank=True)
+
+    class Meta:
+        unique_together = [("plan", "bank")]
+        ordering = ["kind", "-bank__score", "bank_id"]
+
+    @property
+    def total(self):
+        return self.y1 + self.y2 + self.y3
+
+
+class WardCeiling(models.Model):
+    """वडा स्तरीय बजेट सीमा (तर्जुमा चक्र चरण १) र वडाले प्राथमिकता सूची पेश गरेको (चरण ३) — पेशपछि वडाको सूची लक."""
+    plan = models.ForeignKey(MTEFPlan, on_delete=models.CASCADE, related_name="ward_ceilings")
+    ward = models.ForeignKey(Ward, on_delete=models.CASCADE, related_name="+")
+    amount = models.DecimalField("वडा सीमा", max_digits=16, decimal_places=2, default=0)
+    submitted_at = models.DateTimeField("वडाले पेश गरेको", null=True, blank=True)
+    submitted_by = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        unique_together = [("plan", "ward")]
+        ordering = ["ward_id"]

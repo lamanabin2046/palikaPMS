@@ -1,0 +1,111 @@
+{% load nepali_date outputs %}
+{# HTMX partial: आयोजना बैंकको एउटा आयोजना — चरण, प्रोफाइल, अङ्क, कोड, MTEF र कार्यान्वयन इतिहास #}
+<div class="bg-slate-50 border-y border-slate-200 px-4 md:px-6 py-5">
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+    <div>
+      <p class="text-xs font-mono text-slate-500">{{ b.code }}</p>
+      <h3 class="font-bold text-slate-800">{{ b.name }}</h3>
+      <p class="text-xs text-slate-500">{{ summary.done_count|to_nepali_number }}/{{ summary.total|to_nepali_number }} चरण · {{ summary.current_label }}</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'bank_print' b.id %}" target="_blank" rel="noopener" class="btn-chip-slate"><i class="fas fa-print"></i> प्रोफाइल प्रिन्ट</a>
+      <button type="button" class="btn-chip-slate" onclick="this.closest('[id^=wf-detail-]').innerHTML=''"><i class="fas fa-xmark"></i> बन्द</button>
+    </div>
+  </div>
+
+  {% if b.hold %}
+  <div class="mb-4 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm text-rose-800">
+    <i class="fas fa-ban"></i> {{ b.get_hold_display }} — {{ b.hold_at|bs }} · {{ b.hold_reason }}
+  </div>
+  {% endif %}
+  <div class="h-1.5 bg-slate-200 rounded-full mb-5 overflow-hidden">
+    <div class="h-full bg-emerald-400 rounded-full" style="width: {% widthratio summary.done_count summary.total 100 %}%"></div>
+  </div>
+
+  <ol class="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+    {% for st in steps %}
+    <li class="rounded-xl border bg-white p-3 {% if st.n == focus %}ring-2 {% if st.state == 'warning' %}ring-amber-400{% else %}ring-brand-400{% endif %}{% endif %}
+               {% if st.state == 'done' %}border-emerald-200{% elif st.state == 'warning' %}border-amber-300{% elif st.state == 'current' %}border-brand-300{% else %}border-slate-200{% endif %}">
+      <div class="flex items-center gap-2">
+        <span class="wf-dot wf-{{ st.state }} !w-7 !h-7 !text-xs !animate-none">{% if st.state == 'done' %}<i class="fas fa-check"></i>{% else %}{{ st.n|to_nepali_number }}{% endif %}</span>
+        <span class="text-sm font-semibold text-slate-800 leading-tight">{{ st.label }}</span>
+      </div>
+      <div class="mt-2 text-xs text-slate-500 space-y-0.5 min-h-[1.25rem]">
+        {% if st.date_bs %}<div><i class="far fa-calendar mr-1"></i>{{ st.date_bs }}</div>{% endif %}
+        {% if st.note %}<div>{{ st.note }}</div>{% endif %}
+        {% if st.state == 'pending' %}<div class="text-slate-400">अघिल्लो चरण सकिएपछि</div>{% endif %}
+      </div>
+      {% if st.actions %}
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        {% for a in st.actions %}
+          {% if a.modal %}
+          <button type="button" class="{% if a.primary %}btn-chip-brand{% else %}btn-chip-slate{% endif %}" hx-get="{{ a.url }}" hx-target="#app-modal-body" hx-swap="innerHTML">{% if a.icon %}<i class="fas fa-{{ a.icon }}"></i>{% endif %} {{ a.label }}</button>
+          {% else %}
+          <a href="{{ a.url }}" class="{% if a.primary %}btn-chip-brand{% else %}btn-chip-slate{% endif %}">{{ a.label }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+
+  <div class="mt-4 grid lg:grid-cols-3 gap-3">
+    <section class="rounded-xl border border-slate-200 bg-white p-4 text-sm space-y-1.5">
+      <p class="font-semibold text-slate-800"><i class="fas fa-diagram-project text-brand-500"></i> प्रोफाइल</p>
+      <p>{% if b.ward %}वडा {{ b.ward.name|to_nepali_number }}{% endif %}{% if b.location %} · {{ b.location }}{% endif %}</p>
+      <p>{{ b.sector.name|default:"" }}{% if b.subsector %} › {{ b.subsector.name }}{% endif %} · {{ b.get_nature_display }} · {{ b.duration_years|to_nepali_number }} वर्ष</p>
+      {% if b.description %}<p class="text-slate-600">{{ b.description|linebreaksbr }}</p>{% endif %}
+      {% if b.need %}<p class="text-slate-600"><b>औचित्य:</b> {{ b.need }}</p>{% endif %}
+      <p><b>लाभान्वित:</b> {% if b.population %}{{ b.households|default:0|to_nepali_number }} घरधुरी, {{ b.population|to_nepali_number }} जना (महिला {{ b.women|default:0|to_nepali_number }}, दलित / सीमान्तकृत {{ b.marginalized|default:0|to_nepali_number }}){% else %}—{% endif %}</p>
+      <p><b>लागत:</b> प्रस्ताव रु. {{ b.proposed_cost|money:0 }}{% if b.tech_cost %} → इन्जिनियर अनुमान रु. {{ b.tech_cost|money:0 }}{% endif %}{% if b.cost_share_pct %} · जनसहभागिता {{ b.cost_share_pct|floatformat:0|to_nepali_number }}%{% endif %}</p>
+      <p class="text-xs text-slate-500">माग: {{ b.get_source_display }}{% if b.requested_by %} · {{ b.requested_by }}{% endif %}{% if b.request_ref %} · {{ b.request_ref }}{% endif %}</p>
+      {% if b.entry_step %}<span class="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] text-orange-700" title="{{ b.get_source_display }}ले पछि थपेको"><i class="fas fa-clock-rotate-left mr-1"></i>चरण {{ b.entry_step|to_nepali_number }} मा थपिएको · {{ b.get_source_display }}</span>{% endif %}
+      {% if docs %}<p class="flex flex-wrap gap-1.5 pt-1">{% for d in docs %}<a href="{{ d.file.url }}" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 px-2 py-0.5 text-xs text-brand-700"><i class="fas fa-paperclip"></i> {{ d.get_kind_display }}</a>{% endfor %}</p>{% endif %}
+    </section>
+    <section class="rounded-xl border border-slate-200 bg-white p-4 text-sm space-y-1.5">
+      <p class="font-semibold text-slate-800"><i class="fas fa-list-check text-brand-500"></i> तयारी र अङ्क</p>
+      <p class="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">{% for lbl, ok in checks %}<span class="{% if ok %}text-emerald-700{% else %}text-slate-400{% endif %}">{% if ok %}✓{% else %}✗{% endif %} {{ lbl }}</span>{% endfor %}</p>
+      {% if b.tech_note %}<p class="text-xs text-slate-600">{{ b.tech_note }}</p>{% endif %}
+      {% if b.score is not None %}
+      <p class="pt-1"><b class="text-lg text-brand-700">{{ b.score|floatformat:1|to_nepali_number }}</b> <span class="text-slate-500">/ {{ max_score|to_nepali_number }}</span></p>
+      <ul class="text-xs space-y-0.5">{% for r in score_rows %}<li class="flex justify-between gap-2"><span class="text-slate-600">{{ r.c.name }}</span><span>{{ r.v|default:"—"|floatformat:1|to_nepali_number }}/{{ r.c.weight|to_nepali_number }}</span></li>{% endfor %}</ul>
+      {% endif %}
+    </section>
+    <section class="rounded-xl border border-slate-200 bg-white p-4 text-sm space-y-1.5">
+      <p class="font-semibold text-slate-800"><i class="fas fa-tags text-brand-500"></i> MTEF कोड</p>
+      <dl class="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+        <dt class="text-slate-500">प्राथमिकता</dt><dd class="col-span-2">{{ b.get_priority_display|default:"—" }}</dd>
+        <dt class="text-slate-500">स्तम्भ</dt><dd class="col-span-2">{{ b.pillar.name|default:"—" }}</dd>
+        <dt class="text-slate-500">कार्यक्रम</dt><dd class="col-span-2">{{ b.program.name|default:"—" }}</dd>
+        <dt class="text-slate-500">SDG</dt><dd class="col-span-2">{% if b.sdg %}{{ b.sdg|to_nepali_number }}{% else %}—{% endif %}</dd>
+        <dt class="text-slate-500">लैङ्गिक</dt><dd class="col-span-2">{{ b.get_gender_display|default:"—" }}</dd>
+        <dt class="text-slate-500">जलवायु</dt><dd class="col-span-2">{{ b.get_climate_display|default:"—" }}</dd>
+      </dl>
+      {% if not b.coded %}<p class="text-xs text-amber-700"><i class="fas fa-triangle-exclamation"></i> कोड अधुरो — प्रतिवेदनमा “कोड नभएको” मा देखिन्छ।</p>{% endif %}
+    </section>
+  </div>
+
+  {% if lines or summary.exec.projects %}
+  <div class="mt-3 rounded-xl border border-dashed border-brand-300 bg-white p-4">
+    <p class="text-sm font-semibold text-slate-800 mb-2"><i class="fas fa-clock-rotate-left text-brand-600"></i> MTEF र कार्यान्वयन इतिहास</p>
+    <table class="w-full text-xs">
+      <thead class="text-slate-500"><tr class="text-left"><th class="py-1 font-medium">MTEF</th><th class="py-1 font-medium text-right">वर्ष १</th><th class="py-1 font-medium text-right">वर्ष २</th><th class="py-1 font-medium text-right">वर्ष ३</th><th class="py-1 font-medium pl-3">अवस्था</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for ln in lines %}<tr><td class="py-1.5"><a href="{% url 'mtef_plan' ln.plan_id %}" class="text-brand-700">{{ ln.plan }}</a>{% if ln.kind == 'commitment' %} <span class="text-slate-400">(प्रतिबद्धता)</span>{% endif %}</td>
+        <td class="text-right">{{ ln.y1|money:0 }}</td><td class="text-right">{{ ln.y2|money:0 }}</td><td class="text-right">{{ ln.y3|money:0 }}</td><td class="pl-3">{{ ln.plan.get_status_display }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    {% with e=summary.exec %}{% if e.projects %}
+    <div class="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+      <div class="rounded-lg bg-slate-50 p-2"><p class="text-slate-500">बजेट (जम्मा)</p><p class="font-semibold">रु. {{ e.allocated|money:0 }}</p></div>
+      <div class="rounded-lg bg-slate-50 p-2"><p class="text-slate-500">सम्झौता</p><p class="font-semibold">{% if e.contract %}रु. {{ e.contract|money:0 }}{% else %}—{% endif %}</p></div>
+      <div class="rounded-lg bg-slate-50 p-2"><p class="text-slate-500">खर्च</p><p class="font-semibold text-emerald-700">रु. {{ e.spent|money:0 }}</p></div>
+      <div class="rounded-lg bg-slate-50 p-2"><p class="text-slate-500">बाँकी (सम्झौता − खर्च)</p><p class="font-semibold">{% if e.contract %}रु. {{ e.contract|sub:e.spent|money:0 }}{% else %}—{% endif %}</p></div>
+      <div class="rounded-lg bg-slate-50 p-2"><p class="text-slate-500">भौतिक प्रगति</p><p class="font-semibold">{% if e.progress is not None %}{{ e.progress|to_nepali_number }}%{% else %}—{% endif %} · {{ e.status_label }}</p></div>
+    </div>
+    {% if e.contract and e.contract > b.cost %}<p class="mt-2 text-xs text-amber-700"><i class="fas fa-triangle-exclamation"></i> सम्झौता रकम बैंकको लागतभन्दा बढी — MTEF का आगामी वर्ष पुनरावलोकन गर्नुहोस्।</p>{% endif %}
+    {% endif %}{% endwith %}
+  </div>
+  {% endif %}
+</div>

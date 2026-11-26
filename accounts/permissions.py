@@ -29,6 +29,15 @@ ROLE_LABEL = dict(ROLES)
 PERMISSIONS = [
     ("project.manage", "योजना", "योजना दर्ता / सम्पादन", "नयाँ योजना थप्ने र सच्याउने"),
 
+    ("bank.view", "योजना तर्जुमा", "आयोजना बैंक / MTEF हेर्ने", "आयोजना बैंक, MTEF र प्रतिवेदन हेर्ने"),
+    ("bank.propose", "योजना तर्जुमा", "आयोजना प्रस्ताव गर्ने", "वडा / शाखाबाट आयोजना बैंकमा प्रस्ताव दर्ता (आफ्नो वडाको)"),
+    ("bank.ward_priority", "योजना तर्जुमा", "वडा प्राथमिकता तोक्ने", "वडाका प्रस्तावको प्राथमिकता क्रम तोकी स्वीकृत गर्ने (वडा अध्यक्ष)"),
+    ("bank.screen", "योजना तर्जुमा", "प्राविधिक जाँच", "तयारी जाँचसूची (DPR, जग्गा, वातावरण) र इन्जिनियरको लागत अनुमान"),
+    ("bank.manage", "योजना तर्जुमा", "अङ्क, कोड र तयार घोषणा", "मूल्याङ्कन अङ्क, MTEF कोड, तयार / अस्वीकृत / स्थगित, बैंक बाहिरका योजना"),
+    ("mtef.manage", "योजना तर्जुमा", "MTEF तयार गर्ने", "स्रोत सीमा, आयोजना चयन, वर्षगत रकम, वार्षिक बजेटमा पठाउने"),
+    ("mtef.approve", "योजना तर्जुमा", "MTEF स्वीकृत गर्ने", "मध्यकालीन खर्च संरचना स्वीकृत / लक गर्ने"),
+    ("plan.settings", "योजना तर्जुमा", "योजना तर्जुमा सेटिङ", "स्तम्भ, कार्यक्रम, अङ्कका आधार, स्रोत शीर्षक, क्षेत्रअनुसार कोड, पुराना योजनाको रूपान्तरण"),
+
     ("uc.committee", "उपभोक्ता समिति", "समिति गठन / सम्पादन", "पदाधिकारी, सदस्य र तिनका कागजात राख्ने (वडा तहका कर्मचारीले आफ्नै वडाको मात्र)"),
     ("uc.member_docs", "उपभोक्ता समिति", "सदस्यका कागजात हेर्ने", "नागरिकता, NID र फोटो हेर्ने"),
     ("uc.estimate", "उपभोक्ता समिति", "लागत अनुमान थप्ने", ""),
@@ -111,24 +120,24 @@ LOCKED = {("1", "settings.roles")}
 ALL = {c for c, *_ in PERMISSIONS}
 DEFAULT_ROLE_PERMS = {
     "1": ALL - {"uc.approve_ward"},
-    "2": {"field.view", "dashboard.view", "yearend.close", "rev.view", "rev.approve", "rev.print", "uc.approve", "uc.delegate", "uc.member_docs", "uc.agreement_print", "uc.payment_print", "letters.edit",
+    "2": {"bank.view", "mtef.approve", "field.view", "dashboard.view", "yearend.close", "rev.view", "rev.approve", "rev.print", "uc.approve", "uc.delegate", "uc.member_docs", "uc.agreement_print", "uc.payment_print", "letters.edit",
           "report.outputs", "report.uc", "bid.view", "bid.approve", "bid.print",
           "quot.view", "quot.approve", "quot.print", "retention.manage", "budget.view", "app.view", "app.approve", "minor.view", "minor.approve", "minor.print", "mb.view", "firm.view", "firm.blacklist"},
-    "3": {"field.view", "dashboard.view", "rev.view", "rev.manage", "rev.collect", "rev.print", "uc.public_audit", "project.manage", "uc.committee", "uc.member_docs", "uc.estimate", "uc.sifaris_upload",
+    "3": {"bank.manage", "bank.propose", "bank.view", "mtef.manage", "field.view", "dashboard.view", "rev.view", "rev.manage", "rev.collect", "rev.print", "uc.public_audit", "project.manage", "uc.committee", "uc.member_docs", "uc.estimate", "uc.sifaris_upload",
           "uc.agreement_print", "uc.valuation", "uc.payment_print", "letters.edit", "report.outputs", "report.uc", "settings.outputs", "settings.sectors",
           "bid.view", "bid.manage", "bid.print", "quot.view", "quot.manage", "quot.print",
           "retention.recommend", "retention.manage", "budget.view", "budget.manage", "app.view", "app.manage", "minor.view", "minor.manage", "minor.print", "mb.view", "mb.boq", "firm.view", "firm.manage"},
     # इन्जिनियर (४, ७, ८): लागत अनुमान, अन्तिम मूल्याङ्कन र भौतिक प्रगति मात्र भर्ने — बाँकी हेर्ने मात्र (ENGINEER_MAX)
-    "4": {"field.app", "field.view", "uc.estimate", "uc.valuation", "mb.view", "mb.boq", "mb.measure",
+    "4": {"bank.screen", "bank.view", "field.app", "field.view", "uc.estimate", "uc.valuation", "mb.view", "mb.boq", "mb.measure",
           "rev.view", "bid.view", "quot.view", "app.view", "minor.view", "firm.view"},
-    "5": {"field.view", "uc.sifaris_upload"},
-    "6": {"field.view", "uc.public_audit", "uc.committee", "uc.member_docs", "uc.sifaris_portal", "uc.sifaris_upload", "letters.edit", "retention.recommend"},
-    "7": {"field.app", "field.view", "uc.estimate", "uc.valuation", "uc.progress_photo", "mb.view", "mb.boq", "mb.measure",
+    "5": {"bank.propose", "bank.view", "field.view", "uc.sifaris_upload"},
+    "6": {"bank.propose", "bank.view", "field.view", "uc.public_audit", "uc.committee", "uc.member_docs", "uc.sifaris_portal", "uc.sifaris_upload", "letters.edit", "retention.recommend"},
+    "7": {"bank.screen", "bank.view", "field.app", "field.view", "uc.estimate", "uc.valuation", "uc.progress_photo", "mb.view", "mb.boq", "mb.measure",
           "bid.view", "quot.view", "app.view", "minor.view"},
-    "8": {"field.app", "field.view", "dashboard.view", "uc.estimate", "uc.estimate_edit", "uc.valuation", "uc.inspection",
+    "8": {"bank.screen", "bank.view", "field.app", "field.view", "dashboard.view", "uc.estimate", "uc.estimate_edit", "uc.valuation", "uc.inspection",
           "mb.view", "mb.boq", "mb.measure", "report.outputs", "report.uc",
           "rev.view", "bid.view", "quot.view", "budget.view", "app.view", "minor.view", "firm.view"},
-    "9": {"field.view", "uc.approve_ward", "uc.member_docs"},
+    "9": {"bank.view", "bank.ward_priority", "field.view", "uc.approve_ward", "uc.member_docs"},
     # लेखा अधिकृत: भुक्तानी टिप्पणी, कर कट्टी, धरौटी फिर्ता, बजेट र राजस्व असुली
     "10": {"field.view", "dashboard.view", "uc.agreement_print", "uc.payment_print", "report.uc", "report.outputs",
            "bid.view", "bid.print", "quot.view", "quot.print", "minor.view", "minor.print", "retention.manage",
@@ -138,7 +147,7 @@ DEFAULT_ROLE_PERMS = {
 # इन्जिनियरले भर्न मिल्ने: लागत अनुमान, अन्तिम मूल्याङ्कन, भौतिक प्रगति; अरू सबै हेर्ने मात्र।
 # "भूमिका र अनुमति" पेजबाट यसबाहिरको अनुमति इन्जिनियर भूमिकालाई दिन मिल्दैन (CAO को व्यक्तिगत प्रत्यायोजन भने लागू हुन्छ)।
 ENGINEER_ROLES = {"4", "7", "8"}
-ENGINEER_FILL = {"uc.estimate", "uc.estimate_edit", "mb.boq",                      # लागत अनुमान
+ENGINEER_FILL = {"bank.screen", "uc.estimate", "uc.estimate_edit", "mb.boq",                      # लागत अनुमान
                  "uc.valuation",                                                   # अन्तिम मूल्याङ्कन
                  "field.app", "uc.progress_photo", "mb.measure", "uc.inspection"}  # भौतिक प्रगति
 ENGINEER_MAX = ENGINEER_FILL | {c for c, *_ in PERMISSIONS if c.endswith(".view")} | {"report.uc", "report.outputs"}

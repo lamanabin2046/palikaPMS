@@ -1,0 +1,38 @@
+{% load nepali_date outputs %}
+<div class="flex flex-col max-h-[92vh]">
+  <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-100">
+    <div class="min-w-0">
+      <p class="text-xs font-medium text-brand-700 flex items-center gap-1.5"><i class="fas fa-stamp"></i> आयोजना बैंक — तयार घोषणा</p>
+      <h2 class="text-lg font-bold text-slate-800 truncate mt-0.5">{{ b.name }}</h2>
+      <p class="text-xs text-slate-500 mt-0.5">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name|to_nepali_number }}{% endif %} · लागत रु. {{ b.cost|money:0 }} · अङ्क {{ b.score|default:0|floatformat:1|to_nepali_number }}/{{ max_score|to_nepali_number }}{% if b.priority %} · {{ b.priority }}{% endif %}</p>
+    </div>
+    <button type="button" onclick="closeAppModal()" class="w-9 h-9 shrink-0 rounded-lg text-slate-500 hover:bg-slate-100" title="बन्द (Esc)"><i class="fas fa-xmark text-lg"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4 slim-scroll-light">
+    {% if in_mtef %}<div class="rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm">यो आयोजना MTEF मा परिसकेको छ — निर्णय बदल्न पहिले MTEF बाट हटाउनुहोस्।</div>{% endif %}
+    {% if problems %}<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 space-y-0.5">{% for p in problems %}<p class="text-sm text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p }}</p>{% endfor %}<p class="text-xs text-rose-600 pt-1">यी नमिलेसम्म “तयार” गर्न मिल्दैन (स्थगित / अस्वीकृत गर्न मिल्छ)।</p></div>{% endif %}
+    {% if warnings %}<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"><i class="fas fa-triangle-exclamation"></i> तयारी अधुरो: {{ warnings|join:", " }}</div>{% endif %}
+    {% if not in_mtef %}
+    <form id="bank-decide" hx-post="{% url 'bank_decide' b.id %}" hx-target="#bank-decide-msg" hx-swap="innerHTML" class="space-y-3">
+      {% csrf_token %}
+      <div class="grid sm:grid-cols-2 gap-2 text-sm">
+        {% if not b.hold %}
+        <label class="flex items-center gap-2 rounded-lg border border-emerald-300 px-3 py-2"><input type="radio" name="decision" value="ready" {% if not problems %}checked{% endif %} {% if problems %}disabled{% endif %}> <b class="text-emerald-700">तयार</b> — MTEF मा छान्न मिल्ने</label>
+        <label class="flex items-center gap-2 rounded-lg border border-amber-300 px-3 py-2"><input type="radio" name="decision" value="postponed" {% if problems %}checked{% endif %}> <b class="text-amber-700">स्थगित</b> — पछि हेर्ने</label>
+        <label class="flex items-center gap-2 rounded-lg border border-rose-300 px-3 py-2"><input type="radio" name="decision" value="rejected"> <b class="text-rose-700">अस्वीकृत</b></label>
+        {% if b.ready_at %}<label class="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2"><input type="radio" name="decision" value="reopen"> तयार घोषणा फिर्ता</label>{% endif %}
+        {% else %}
+        <label class="flex items-center gap-2 rounded-lg border border-brand-300 px-3 py-2"><input type="radio" name="decision" value="reopen" checked> फेरि प्रक्रियामा ल्याउने</label>
+        {% endif %}
+      </div>
+      <div><label class="form-label">निर्णय नं. / मिति</label><input name="ref" class="form-input" placeholder="जस्तै: बजेट तथा कार्यक्रम तर्जुमा समिति, निर्णय नं. ४"></div>
+      <div><label class="form-label">कारण / टिप्पणी (स्थगित / अस्वीकृतमा अनिवार्य)</label><textarea name="reason" rows="2" class="form-input"></textarea></div>
+      <div id="bank-decide-msg"></div>
+    </form>
+    {% endif %}
+  </div>
+  <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+    <button type="button" onclick="closeAppModal()" class="btn-secondary">बन्द</button>
+    {% if not in_mtef %}<button type="submit" form="bank-decide" class="btn-primary"><i class="fas fa-stamp"></i> निर्णय सुरक्षित गर्नुहोस्</button>{% endif %}
+  </div>
+</div>

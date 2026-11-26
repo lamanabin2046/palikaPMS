@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}कोड बाँकी{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-box-archive"></i> आयोजना बैंक</p>
+      <h1 class="text-xl font-bold text-slate-800">MTEF कोड बाँकी — {{ total|to_nepali_number }} आयोजना</h1>
+      <p class="text-sm text-slate-500">क्षेत्रको पूर्वनिर्धारित कोड छानिएका सबैमा एकैपटक लगाउनुहोस्, फरक भएकालाई “अङ्क र कोड” बाट एक-एक गरी सच्याउनुहोस्।</p></div>
+    <div class="flex gap-2"><a href="{% url 'plan_settings' %}#sectors" class="btn-secondary"><i class="fas fa-gear"></i> क्षेत्रअनुसार कोड</a><a href="{% url 'bank_list' %}" class="btn-secondary"><i class="fas fa-arrow-left"></i> आयोजना बैंक</a></div>
+  </div>
+  <form method="post" class="card overflow-hidden">{% csrf_token %}
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-3 text-sm">
+      <label class="flex items-center gap-1"><input type="checkbox" onclick="document.querySelectorAll('[name=bid]').forEach(c=>c.checked=this.checked)"> सबै</label>
+      <button class="btn-chip-brand"><i class="fas fa-wand-magic-sparkles"></i> छानिएकामा क्षेत्रको कोड लगाउने</button>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-3 py-2 w-8"></th><th class="px-3 py-2 text-left font-medium">आयोजना</th><th class="px-3 py-2 text-left font-medium">क्षेत्र</th><th class="px-3 py-2 text-left font-medium">अहिलेको कोड</th><th class="px-3 py-2 text-left font-medium">क्षेत्रको सुझाव</th><th class="px-3 py-2"></th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for r in rows %}{% with b=r.b d=r.d %}<tr>
+        <td class="px-3 py-2"><input type="checkbox" name="bid" value="{{ b.id }}" {% if not d %}disabled{% endif %}></td>
+        <td class="px-3 py-2">{{ b.name }}<div class="text-xs text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name }}{% endif %}</div></td>
+        <td class="px-3 py-2 text-xs">{{ b.sector.name|default:"—" }}</td>
+        <td class="px-3 py-2 text-xs text-slate-500">{{ b.priority|default:"—" }} · {{ b.pillar.name|default:"स्तम्भ —" }} · SDG {{ b.sdg|default:"—" }} · {{ b.get_gender_display|default:"लैङ्गिक —" }} · {{ b.get_climate_display|default:"जलवायु —" }}</td>
+        <td class="px-3 py-2 text-xs">{% if d %}{{ d.priority|default:"—" }} · {{ d.pillar.name|default:"—" }} · SDG {{ d.sdg|default:"—" }} · {{ d.gender|default:"—" }} · {{ d.climate|default:"—" }}{% else %}<span class="text-amber-700">सुझाव छैन</span>{% endif %}</td>
+        <td class="px-3 py-2">{% if b.tech_at %}<a href="{% url 'bank_score' b.id %}?next={% url 'bank_codes' %}" class="btn-chip-slate">सम्पादन</a>{% endif %}</td>
+      </tr>{% endwith %}{% empty %}<tr><td colspan="6" class="px-4 py-10 text-center text-emerald-700"><i class="fas fa-circle-check"></i> सबै आयोजनामा कोड पूरा छ।</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </form>
+</div>
+{% endblock %}

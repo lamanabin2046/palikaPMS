@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}पुराना योजना रूपान्तरण{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-box-archive"></i> आयोजना बैंक</p>
+      <h1 class="text-xl font-bold text-slate-800">पुराना योजनालाई आयोजना बैंकमा जोड्ने</h1>
+      <p class="text-sm text-slate-500">एकपटक मात्र — हरेक नजोडिएको योजनाको बैंक अभिलेख बनाई जोडिन्छ। योजनाको खरिद, भुक्तानी केही बदलिँदैन। फेरि चलाए दोहोरिँदैन।</p></div>
+    <a href="{% url 'plan_settings' %}" class="btn-secondary"><i class="fas fa-arrow-left"></i> सेटिङ</a>
+  </div>
+  <div class="card p-5 space-y-3">
+    <p class="font-semibold text-slate-700">पूर्वावलोकन</p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+      <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">बैंक अभिलेख बन्ने</p><p class="text-2xl font-bold">{{ pv.total|to_nepali_number }}</p></div>
+      <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">क्षेत्रको कोड पाउने</p><p class="text-2xl font-bold text-emerald-700">{{ pv.coded|to_nepali_number }}</p></div>
+      <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">कोड भर्न बाँकी रहने</p><p class="text-2xl font-bold text-amber-700">{{ pv.uncoded|to_nepali_number }}</p></div>
+      <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">क्रमागत</p><p class="text-2xl font-bold">{{ pv.carried|to_nepali_number }}</p></div>
+    </div>
+    {% if pv.by_fy %}<p class="text-xs text-slate-500">आ.व. अनुसार: {% for k, n in pv.by_fy %}{{ k }} — {{ n|to_nepali_number }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    <ul class="text-xs text-slate-600 list-disc pl-5 space-y-0.5">
+      <li>नाम, वडा, क्षेत्र, ठेगाना र बजेट योजनाबाटै आउँछ; चरण “तयार” सम्म “पुरानो अभिलेख” भनी भरिन्छ।</li>
+      <li>बजेट, सम्झौता, खर्च र प्रगति जोडिएको योजनाबाटै आफैँ देखिन्छ।</li>
+      <li>कोड पहिले <a href="{% url 'plan_settings' %}#sectors" class="text-brand-700 underline">क्षेत्रअनुसार कोड</a> राखेर चलाउँदा धेरैमा आफैँ लाग्छ; बाँकी “कोड बाँकी” पेजबाट।</li>
+    </ul>
+    {% if pv.total %}
+    <form method="post" class="pt-2">{% csrf_token %}<input type="hidden" name="confirm" value="1">
+      <button class="btn-primary" onclick="this.disabled=true;this.form.submit()"><i class="fas fa-link"></i> {{ pv.total|to_nepali_number }} योजना आयोजना बैंकमा जोड्नुहोस्</button></form>
+    {% else %}<p class="text-emerald-700 text-sm"><i class="fas fa-circle-check"></i> सबै योजना पहिले नै जोडिएका छन्।</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

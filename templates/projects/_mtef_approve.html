@@ -1,0 +1,42 @@
+{% load outputs nepali_date %}
+<div class="flex flex-col max-h-[92vh]">
+  <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-100">
+    <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-stamp"></i> मध्यकालीन खर्च संरचना — निर्णय</p>
+      <h2 class="text-lg font-bold text-slate-800 mt-0.5">आ.व. {{ plan }}</h2>
+      <p class="text-xs text-slate-500">{% for k in t.values %}{{ k.name }}: रु. {{ k.used|money:0 }} / {{ k.cap|money:0 }}{% if not forloop.last %} · {% endif %}{% endfor %}</p></div>
+    <button type="button" onclick="closeAppModal()" class="w-9 h-9 shrink-0 rounded-lg text-slate-500 hover:bg-slate-100"><i class="fas fa-xmark text-lg"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+    <ol class="space-y-2">
+      {% for s in steps %}
+      <li class="flex items-start gap-3 rounded-xl border px-3 py-2.5 {% if s.done %}border-emerald-200 bg-emerald-50/50{% elif s.next %}border-brand-300{% else %}border-slate-200{% endif %}">
+        <span class="wf-dot {% if s.done %}wf-done{% elif s.next %}wf-current{% else %}wf-pending{% endif %} !w-7 !h-7 !text-xs !animate-none shrink-0">{% if s.done %}<i class="fas fa-check"></i>{% else %}{{ forloop.counter|to_nepali_number }}{% endif %}</span>
+        <div class="text-sm"><p class="font-semibold text-slate-800">{{ s.label }}</p>
+          {% if s.done %}<p class="text-xs text-slate-600">{{ s.ref }} · {{ s.at|bs }}</p>{% elif s.next %}<p class="text-xs text-brand-700">अहिले यो चरण</p>{% else %}<p class="text-xs text-slate-400">अघिल्लो निर्णयपछि</p>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if nxt %}
+      {% if nxt.0 == 'recommend' and problems %}<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 space-y-0.5">{% for p in problems %}<p class="text-sm text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p }}</p>{% endfor %}<p class="text-xs text-rose-600 pt-1">यी मिलाएपछि मात्र समितिको सिफारिस प्रविष्ट गर्न मिल्छ।</p></div>{% endif %}
+      {% if nxt.0 == 'recommend' and warnings %}<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 space-y-0.5">{% for w in warnings %}<p>• {{ w }}</p>{% endfor %}</div>{% endif %}
+      {% if can_next %}
+      <form id="mtef-ap" hx-post="{% url 'mtef_approve' plan.id %}" hx-target="#mtef-ap-msg" class="space-y-2">{% csrf_token %}<input type="hidden" name="decision" value="{{ nxt.0 }}">
+        <label class="form-label">{{ nxt.4 }} — निर्णय नं. / मिति *</label>
+        <input name="ref" class="form-input" placeholder="{% if nxt.0 == 'recommend' %}जस्तै: बजेट तथा कार्यक्रम तर्जुमा समिति, निर्णय नं. २, २०८३-०२-२५{% elif nxt.0 == 'executive' %}जस्तै: कार्यपालिका बैठक निर्णय नं. ५, २०८३-०३-०२{% else %}जस्तै: गाउँसभा निर्णय नं. ३, २०८३-०३-१०{% endif %}">
+        <div id="mtef-ap-msg"></div></form>
+      {% else %}<p class="text-sm text-slate-500"><i class="fas fa-circle-info"></i> {% if nxt.0 == 'recommend' %}समितिको सिफारिस योजना शाखाले प्रविष्ट गर्छ।{% else %}कार्यपालिका र सभाको निर्णय प्रमुख प्रशासकीय अधिकृतले प्रविष्ट गर्नुहुन्छ।{% endif %}</p>{% endif %}
+    {% else %}
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><i class="fas fa-lock"></i> सभाबाट पारित भई लक भएको — {{ plan.approver_name }}</div>
+    {% endif %}
+    {% if can_unlock %}
+    <details class="text-sm"><summary class="cursor-pointer text-slate-500">मस्यौदामा फर्काउने (सच्याउन)</summary>
+      <form id="mtef-un" hx-post="{% url 'mtef_approve' plan.id %}" hx-target="#mtef-un-msg" class="mt-2 space-y-2">{% csrf_token %}<input type="hidden" name="decision" value="unlock">
+        <textarea name="reason" rows="2" class="form-input" placeholder="कारण"></textarea><div id="mtef-un-msg"></div>
+        <button class="btn-secondary"><i class="fas fa-lock-open"></i> मस्यौदामा फर्काउने</button></form></details>
+    {% endif %}
+  </div>
+  <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+    <button type="button" onclick="closeAppModal()" class="btn-secondary">बन्द</button>
+    {% if nxt and can_next %}{% if nxt.0 != 'recommend' or not problems %}<button type="submit" form="mtef-ap" class="btn-primary"><i class="fas fa-stamp"></i> {{ nxt.4 }} प्रविष्ट गर्नुहोस्</button>{% endif %}{% endif %}
+  </div>
+</div>

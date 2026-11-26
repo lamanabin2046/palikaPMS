@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}मध्यकालीन खर्च संरचना{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><h1 class="text-2xl font-bold text-slate-800">मध्यकालीन खर्च संरचना (MTEF)</h1>
+      <p class="text-sm text-slate-500">तीन वर्षको चक्रीय योजना — स्रोत सीमा, क्रमागत प्रतिबद्धता र आयोजना बैंकबाट चयन</p></div>
+    <a href="{% url 'bank_list' %}" class="btn-secondary"><i class="fas fa-box-archive"></i> आयोजना बैंक</a>
+  </div>
+  {% if can %}
+  <form method="post" class="card p-4 flex flex-wrap items-end gap-3">{% csrf_token %}
+    <div><label class="form-label">पहिलो वर्ष (आ.व.)</label>
+      <select name="start_fy" class="form-select !w-auto"><option value="">— छान्नुहोस् —</option>{% for f in fys %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}</select></div>
+    <span class="text-sm text-slate-400 pb-2">वा</span>
+    <div><label class="form-label">नयाँ आ.व.</label><input name="new_fy" class="form-input" style="width:9rem" placeholder="{{ suggest|default:'२०८४/८५' }}"></div>
+    <button class="btn-primary"><i class="fas fa-plus"></i> नयाँ MTEF बनाउनुहोस्</button>
+    <p class="text-xs text-slate-500 w-full">अघिल्लो MTEF को स्रोत सीमा र आयोजनाका वर्षगत रकम एक वर्ष सरेर आउँछन्; पहिलो वर्षमा बजेटमा परिसकेका (क्रमागत सहित) आयोजना प्रतिबद्धतामा आफैँ थपिन्छन्।</p>
+  </form>
+  {% endif %}
+  <div class="card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2.5 text-left font-medium">MTEF</th><th class="px-3 py-2.5 text-left font-medium">अवस्था</th><th class="px-3 py-2.5 text-right font-medium">आयोजना</th><th class="px-3 py-2.5 text-right font-medium">पहिलो वर्ष</th><th class="px-3 py-2.5 text-right font-medium">दोस्रो वर्ष</th><th class="px-3 py-2.5 text-right font-medium">तेस्रो वर्ष</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for r in rows %}<tr class="hover:bg-slate-50">
+        <td class="px-4 py-3"><a href="{% url 'mtef_plan' r.p.id %}" class="font-semibold text-brand-700">आ.व. {{ r.p }}</a>{% if r.p.sent_at %}<div class="text-[11px] text-slate-400">बजेटमा पठाइएको {{ r.p.sent_at|bs }}</div>{% endif %}</td>
+        <td class="px-3 py-3">{% if r.p.status == 'approved' %}<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fas fa-lock"></i> सभाबाट पारित</span><div class="text-[11px] text-slate-400">{{ r.p.approval_ref }}</div>{% elif r.p.status == 'draft' %}<span class="badge bg-amber-50 text-amber-700 border border-amber-200">मस्यौदा</span>{% else %}<span class="badge bg-brand-50 text-brand-700 border border-brand-200">{{ r.p.get_status_display }}</span>{% endif %}</td>
+        <td class="px-3 py-3 text-right">{{ r.n|to_nepali_number }}</td>
+        <td class="px-3 py-3 text-right">{{ r.t.y1.used|money:0 }}<div class="text-[11px] {% if r.t.y1.left < 0 %}text-rose-600{% else %}text-slate-400{% endif %}">सीमा {{ r.t.y1.cap|money:0 }}</div></td>
+        <td class="px-3 py-3 text-right">{{ r.t.y2.used|money:0 }}<div class="text-[11px] {% if r.t.y2.left < 0 %}text-rose-600{% else %}text-slate-400{% endif %}">सीमा {{ r.t.y2.cap|money:0 }}</div></td>
+        <td class="px-3 py-3 text-right">{{ r.t.y3.used|money:0 }}<div class="text-[11px] {% if r.t.y3.left < 0 %}text-rose-600{% else %}text-slate-400{% endif %}">सीमा {{ r.t.y3.cap|money:0 }}</div></td>
+      </tr>{% empty %}<tr><td colspan="6" class="px-4 py-12 text-center text-slate-500">अहिलेसम्म MTEF छैन।{% if can %} माथिबाट पहिलो वर्ष छानेर बनाउनुहोस्।{% endif %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

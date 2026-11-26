@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}योजना तर्जुमा सेटिङ{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-5">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-gear text-brand-600"></i> योजना तर्जुमा सेटिङ</h1>
+      <p class="text-sm text-slate-500">आयोजना बैंक र MTEF का स्तम्भ, कार्यक्रम, अङ्कका आधार, स्रोत शीर्षक र क्षेत्रअनुसार कोड</p></div>
+    <a href="{% url 'bank_list' %}" class="btn-secondary"><i class="fas fa-arrow-left"></i> आयोजना बैंक</a>
+  </div>
+
+  <div class="card p-5 flex flex-wrap items-center justify-between gap-3" id="convert">
+    <div><p class="font-semibold text-slate-700">पुराना योजना आयोजना बैंकमा जोड्ने</p>
+      <p class="text-sm text-slate-500">{% if pv.total %}{{ pv.total|to_nepali_number }} योजना अझै बैंकसँग जोडिएका छैनन् ({{ pv.coded|to_nepali_number }} ले क्षेत्रको कोड पाउँछन्)। पहिले तल “क्षेत्रअनुसार कोड” राख्नुहोस्।{% else %}सबै योजना जोडिएका छन्।{% endif %}</p></div>
+    {% if pv.total %}<a href="{% url 'bank_convert' %}" class="btn-primary"><i class="fas fa-eye"></i> पूर्वावलोकन र रूपान्तरण</a>{% endif %}
+  </div>
+
+  <form method="post" class="card p-5 space-y-3" id="general">{% csrf_token %}<input type="hidden" name="act" value="general">
+    <p class="font-semibold text-slate-700">सामान्य</p>
+    <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="ward_priority" value="1" class="mt-0.5" {% if S.ward_priority %}checked{% endif %}>
+      <span><b>वडा प्राथमिकता चरण</b><span class="block text-xs text-slate-500">वडा अध्यक्षले वडाका प्रस्तावको क्रम तोकेपछि मात्र प्राविधिक जाँच। हटाए प्रस्ताव सिधै जाँचमा जान्छ।</span></span></label>
+    <div class="grid sm:grid-cols-3 gap-3">
+      <div><label class="form-label">बैंक नम्बरको अगाडि</label><input name="prefix" value="{{ S.prefix }}" class="form-input"><p class="text-[11px] text-slate-400 mt-1">जस्तै PB-२०८३-०००१</p></div>
+      <div><label class="form-label">तयार घोषणा गर्न न्यूनतम अङ्क</label><input name="min_ready_score" value="{{ S.min_ready_score }}" class="form-input" inputmode="numeric"><p class="text-[11px] text-slate-400 mt-1">० = सीमा छैन</p></div>
+    </div>
+    <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
+  </form>
+
+  <form method="post" class="card p-5 space-y-3" id="criteria">{% csrf_token %}<input type="hidden" name="act" value="criteria">
+    <p class="font-semibold text-slate-700">मूल्याङ्कनका आधार <span class="text-xs font-normal {% if crit_total == 100 %}text-emerald-700{% else %}text-amber-700{% endif %}">— सक्रियको जम्मा {{ crit_total|to_nepali_number }}</span></p>
+    <table class="w-full text-sm"><thead class="text-xs text-slate-500"><tr class="text-left"><th class="py-1 font-medium">आधार</th><th class="py-1 font-medium w-24">पूर्णाङ्क</th><th class="py-1 font-medium w-56">आफैँ सुझाव</th><th class="py-1 font-medium w-16">सक्रिय</th></tr></thead><tbody>
+      {% for c in criteria %}<tr><td class="py-1 pr-2"><input name="cr_name_{{ c.id }}" value="{{ c.name }}" class="form-input"></td>
+        <td class="py-1 pr-2"><input name="cr_w_{{ c.id }}" value="{{ c.weight }}" class="form-input" inputmode="numeric"></td>
+        <td class="py-1 pr-2"><select name="cr_auto_{{ c.id }}" class="form-select">{% for k, v in AUTO %}<option value="{{ k }}" {% if c.auto == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></td>
+        <td class="py-1 text-center"><input type="checkbox" name="cr_active_{{ c.id }}" value="1" {% if c.is_active %}checked{% endif %}></td></tr>{% endfor %}
+      <tr><td class="py-1 pr-2"><input name="new_criterion" class="form-input" placeholder="+ नयाँ आधार"></td><td class="py-1 pr-2"><input name="new_weight" class="form-input" placeholder="१०"></td><td></td><td></td></tr>
+    </tbody></table>
+    <p class="text-[11px] text-slate-400">“आफैँ सुझाव” भएका आधारमा प्रस्ताव र प्राविधिक जाँचबाट अङ्क सुझाइन्छ (योजना शाखाले बदल्न सक्छ)।</p>
+    <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
+  </form>
+
+  <form method="post" class="card p-5 space-y-3" id="pillars">{% csrf_token %}<input type="hidden" name="act" value="pillars">
+    <p class="font-semibold text-slate-700">रणनीतिक स्तम्भ र कार्यक्रम (आवधिक योजना)</p>
+    <div class="space-y-3">
+    {% for pl in pillars %}
+      <div class="rounded-xl border border-slate-200 p-3">
+        <div class="flex gap-2 items-center"><input name="pl_code_{{ pl.id }}" value="{{ pl.code }}" class="form-input" style="width:5rem" placeholder="कोड"><input name="pl_name_{{ pl.id }}" value="{{ pl.name }}" class="form-input font-semibold"><label class="text-xs flex items-center gap-1 whitespace-nowrap"><input type="checkbox" name="pl_active_{{ pl.id }}" value="1" {% if pl.is_active %}checked{% endif %}> सक्रिय</label></div>
+        <div class="mt-2 pl-6 space-y-1">{% for pg in pl.programs.all %}
+          <div class="flex gap-2 items-center"><input name="pg_code_{{ pg.id }}" value="{{ pg.code }}" class="form-input !py-1" style="width:5rem"><input name="pg_name_{{ pg.id }}" value="{{ pg.name }}" class="form-input !py-1"><label class="text-xs flex items-center gap-1 whitespace-nowrap"><input type="checkbox" name="pg_active_{{ pg.id }}" value="1" {% if pg.is_active %}checked{% endif %}> सक्रिय</label></div>{% endfor %}</div>
+      </div>
+    {% endfor %}
+    </div>
+    <div class="grid sm:grid-cols-3 gap-2">
+      <input name="new_pillar" class="form-input" placeholder="+ नयाँ स्तम्भ">
+      <select name="new_program_pillar" class="form-select"><option value="">कार्यक्रम थप्ने स्तम्भ…</option>{% for pl in pillars %}<option value="{{ pl.id }}">{{ pl.name }}</option>{% endfor %}</select>
+      <input name="new_program" class="form-input" placeholder="+ नयाँ कार्यक्रम">
+    </div>
+    <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
+  </form>
+
+  <form method="post" class="card p-5 space-y-3" id="sectors">{% csrf_token %}<input type="hidden" name="act" value="sectors">
+    <p class="font-semibold text-slate-700">क्षेत्रअनुसार पूर्वनिर्धारित कोड <span class="text-xs font-normal text-slate-500">— नयाँ प्रस्ताव र रूपान्तरणमा आफैँ लाग्छ</span></p>
+    <p class="text-xs text-slate-500">कार्यक्रम ऐच्छिक हो — स्तम्भ छानेपछि त्यसैका कार्यक्रम मात्र देखिन्छन्; क्षेत्र फराकिलो भए “—” नै छोड्नुहोस्, आयोजनाको “अङ्क र कोड” मा छुट्टै छान्न सकिन्छ।</p>
+    <div class="overflow-x-auto"><table class="text-sm" style="min-width:100%"><thead class="text-xs text-slate-500"><tr class="text-left"><th class="py-1 font-medium">क्षेत्र</th><th class="py-1 font-medium">P1/P2</th><th class="py-1 font-medium">स्तम्भ</th><th class="py-1 font-medium">कार्यक्रम</th><th class="py-1 font-medium">SDG</th><th class="py-1 font-medium">लैङ्गिक</th><th class="py-1 font-medium">जलवायु</th></tr></thead><tbody>
+      {% for r in sectors %}{% with s=r.s d=r.d %}<tr>
+        <td class="py-1 pr-2 whitespace-nowrap">{{ s.name }}</td>
+        <td class="py-1 pr-1"><select name="sd_pr_{{ s.id }}" class="form-select !py-1" style="min-width:6.5rem"><option value="">—</option><option value="P1" {% if d.priority == 'P1' %}selected{% endif %}>P1</option><option value="P2" {% if d.priority == 'P2' %}selected{% endif %}>P2</option></select></td>
+        <td class="py-1 pr-1"><select name="sd_pl_{{ s.id }}" class="form-select !py-1 js-pillar" data-row="{{ s.id }}" style="min-width:14rem"><option value="">—</option>{% for pl in pillars %}<option value="{{ pl.id }}" {% if d.pillar_id == pl.id %}selected{% endif %}>{{ pl.name }}</option>{% endfor %}</select></td>
+        <td class="py-1 pr-1"><select name="sd_pg_{{ s.id }}" class="form-select !py-1 js-prog" data-row="{{ s.id }}" style="min-width:13rem"><option value="">— (ऐच्छिक)</option>{% for pg in programs %}<option value="{{ pg.id }}" data-pillar="{{ pg.pillar_id }}" {% if d.program_id == pg.id %}selected{% endif %}>{{ pg.name }}</option>{% endfor %}</select></td>
+        <td class="py-1 pr-1"><select name="sd_sdg_{{ s.id }}" class="form-select !py-1" style="min-width:17rem"><option value="">—</option>{% for i, lbl in sdgs %}<option value="{{ i }}" {% if d.sdg == i %}selected{% endif %}>{{ lbl }}</option>{% endfor %}</select></td>
+        <td class="py-1 pr-1"><select name="sd_g_{{ s.id }}" class="form-select !py-1" style="min-width:9rem"><option value="">—</option>{% for k, v in GENDER %}<option value="{{ k }}" {% if d.gender == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></td>
+        <td class="py-1"><select name="sd_c_{{ s.id }}" class="form-select !py-1" style="min-width:10rem"><option value="">—</option>{% for k, v in CLIMATE %}<option value="{{ k }}" {% if d.climate == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></td>
+      </tr>{% endwith %}{% empty %}<tr><td colspan="7" class="py-4 text-slate-500">क्षेत्र दर्ता छैन — सेटिङ → क्षेत्रबाट थप्नुहोस्।</td></tr>{% endfor %}
+    </tbody></table></div>
+    <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
+  </form>
+
+  <form method="post" class="card p-5 space-y-3" id="heads">{% csrf_token %}<input type="hidden" name="act" value="heads">
+    <p class="font-semibold text-slate-700">MTEF स्रोत शीर्षक</p>
+    <div class="grid sm:grid-cols-2 gap-2">{% for h in heads %}<div class="flex gap-2 items-center"><input name="rh_name_{{ h.id }}" value="{{ h.name }}" class="form-input"><label class="text-xs flex items-center gap-1 whitespace-nowrap"><input type="checkbox" name="rh_active_{{ h.id }}" value="1" {% if h.is_active %}checked{% endif %}> सक्रिय</label></div>{% endfor %}
+      <input name="new_head" class="form-input" placeholder="+ नयाँ स्रोत शीर्षक"></div>
+    <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  function sync(row) {
+    var pl = document.querySelector('.js-pillar[data-row="' + row + '"]');
+    var pg = document.querySelector('.js-prog[data-row="' + row + '"]');
+    if (!pl || !pg) return;
+    Array.prototype.forEach.call(pg.options, function (o) {
+      if (!o.value) return;
+      var ok = pl.value && o.getAttribute('data-pillar') === pl.value;
+      o.hidden = !ok; o.disabled = !ok;
+      if (!ok && o.selected) pg.value = '';
+    });
+  }
+  document.querySelectorAll('.js-pillar').forEach(function (s) {
+    sync(s.dataset.row);
+    s.addEventListener('change', function () { sync(s.dataset.row); });
+  });
+})();
+</script>
+{% endblock %}

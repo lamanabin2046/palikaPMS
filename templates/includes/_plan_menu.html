@@ -1,0 +1,19 @@
+{% comment %}योजना तर्जुमा — आयोजना बैंक र MTEF (सबै भूमिकामा, अनुमतिअनुसार){% endcomment %}
+{% if 'bank.view' in me.perms or 'bank.propose' in me.perms or 'bank.manage' in me.perms or 'mtef.manage' in me.perms or 'mtef.approve' in me.perms %}
+<li class="sidebar-group">
+  <button type="button" onclick="toggleSubmenu(this)" class="nav-link-item w-full">
+    <i data-lucide="archive" class="nav-icon"></i>
+    <span class="sidebar-label flex-1 text-left">योजना तर्जुमा</span>
+    <i data-lucide="chevron-right" class="menu-arrow"></i>
+  </button>
+  <ul class="submenu-panel {% if current not in 'plan_cycle,revenue_current,mtef_revenue,bank_list,bank_add,bank_edit,bank_technical,bank_score,bank_import,bank_ward_priority,bank_outside,bank_codes,bank_convert,plan_settings,plan_report,mtef_list,mtef_plan,mtef_send' %}hidden{% endif %} mt-1 ml-5 pl-3 border-l border-white/10 space-y-0.5">
+    <li><a href="{% url 'plan_cycle' %}" class="submenu-link {% if current == 'plan_cycle' %}active{% endif %}"><i data-lucide="refresh-cw" class="sub-icon"></i><span>तर्जुमा चक्र (सुरु यहाँ)</span></a></li>
+    <li><a href="{% url 'revenue_current' %}" class="submenu-link {% if current == 'revenue_current' or current == 'mtef_revenue' %}active{% endif %}"><i data-lucide="coins" class="sub-icon"></i><span>स्रोत अनुमान र सीमा</span></a></li>
+    <li><a href="{% url 'bank_list' %}" class="submenu-link {% if current == 'bank_list' %}active{% endif %}"><i data-lucide="box" class="sub-icon"></i><span>आयोजना बैंक</span></a></li>
+    {% if 'bank.ward_priority' in me.perms %}<li><a href="{% url 'bank_ward_priority' %}" class="submenu-link {% if current == 'bank_ward_priority' %}active{% endif %}"><i data-lucide="list-ordered" class="sub-icon"></i><span>वडा प्राथमिकता</span></a></li>{% endif %}
+    <li><a href="{% url 'mtef_list' %}" class="submenu-link {% if current == 'mtef_list' or current == 'mtef_plan' or current == 'mtef_send' %}active{% endif %}"><i data-lucide="layers" class="sub-icon"></i><span>MTEF (३ वर्ष)</span></a></li>
+    <li><a href="{% url 'plan_report' %}" class="submenu-link {% if current == 'plan_report' %}active{% endif %}"><i data-lucide="bar-chart-3" class="sub-icon"></i><span>योजना vs खर्च</span></a></li>
+    {% if 'plan.settings' in me.perms %}<li><a href="{% url 'plan_settings' %}" class="submenu-link {% if current == 'plan_settings' or current == 'bank_convert' %}active{% endif %}"><i data-lucide="settings-2" class="sub-icon"></i><span>सेटिङ / रूपान्तरण</span></a></li>{% endif %}
+  </ul>
+</li>
+{% endif %}

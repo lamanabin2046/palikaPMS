@@ -51,6 +51,10 @@
       </li>
       {% endif %}
     </ul>
+    {# योजना तर्जुमा (तर्जुमा चक्र, स्रोत अनुमान, आयोजना बैंक, MTEF) — सबै भूमिकामा, अनुमतिअनुसार #}
+    <ul class="space-y-0.5 mt-1">
+      {% include 'includes/_plan_menu.html' %}
+    </ul>
     {% if user.user_type == '1' %}
     <ul class="space-y-0.5">
 

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}योजना vs खर्च{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-box-archive"></i> योजना तर्जुमा</p>
+      <h1 class="text-xl md:text-2xl font-bold text-slate-800">योजना vs बजेट vs खर्च — आ.व. {{ fy.name|default:"—" }}</h1>
+      <p class="text-sm text-slate-500">MTEF पहिलो वर्ष{% if not plan %} (यो आ.व. को MTEF छैन){% endif %}, वार्षिक बजेट, सम्झौता र भुक्तानी — कोडअनुसार{% if outside %} · {{ outside|to_nepali_number }} योजना बैंकसँग नजोडिएका{% endif %}</p></div>
+    <div class="flex gap-2">
+      <form method="get" class="flex gap-2"><input type="hidden" name="dim" value="{{ dim }}"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy and x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endfor %}</select></form>
+      <a href="?fiscalyear={{ fy.id }}&dim={{ dim }}&export=xlsx" class="btn-secondary"><i class="fas fa-file-excel"></i> Excel</a>
+    </div>
+  </div>
+  <div class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap gap-2">{% for k, v in dims %}<a href="?fiscalyear={{ fy.id }}&dim={{ k }}" class="rounded-full px-3 py-1 text-xs border {% if dim == k %}bg-brand-600 text-white border-brand-600{% else %}border-slate-300 text-slate-600{% endif %}">{{ v }}</a>{% endfor %}</div>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">समूह</th><th class="px-3 py-2 text-right font-medium">MTEF (योजना)</th><th class="px-3 py-2 text-right font-medium">योजना सङ्ख्या</th><th class="px-3 py-2 text-right font-medium">वार्षिक बजेट</th><th class="px-3 py-2 text-right font-medium">सम्झौता</th><th class="px-3 py-2 text-right font-medium">खर्च</th><th class="px-3 py-2 font-medium" style="width:16%">खर्च / बजेट</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for r in rows %}<tr><td class="px-4 py-2 {% if r.label == 'कोड नभएको' or r.label == 'बैंकसँग नजोडिएको' %}text-amber-700{% endif %}">{{ r.label }}</td>
+        <td class="px-3 py-2 text-right">{{ r.plan|money:0 }}</td><td class="px-3 py-2 text-right">{{ r.n|to_nepali_number }}</td><td class="px-3 py-2 text-right">{{ r.budget|money:0 }}</td>
+        <td class="px-3 py-2 text-right">{{ r.contract|money:0 }}</td><td class="px-3 py-2 text-right text-emerald-700">{{ r.spent|money:0 }}</td>
+        <td class="px-3 py-2">{% if r.spent_pct is not None %}<div class="flex items-center gap-2"><div style="flex:1;height:7px;background:#e2e8f0;border-radius:9px"><div style="height:7px;border-radius:9px;background:#059669;width:{% if r.spent_pct > 100 %}100{% else %}{{ r.spent_pct }}{% endif %}%"></div></div><span class="text-xs">{{ r.spent_pct|to_nepali_number }}%</span></div>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">यो आ.व. मा योजना छैन।</td></tr>{% endfor %}
+      </tbody>
+      <tfoot class="bg-slate-50 font-semibold"><tr><td class="px-4 py-2">जम्मा</td><td class="px-3 py-2 text-right">{{ tot.plan|money:0 }}</td><td class="px-3 py-2 text-right">{{ tot.n|to_nepali_number }}</td><td class="px-3 py-2 text-right">{{ tot.budget|money:0 }}</td><td class="px-3 py-2 text-right">{{ tot.contract|money:0 }}</td><td class="px-3 py-2 text-right">{{ tot.spent|money:0 }}</td><td></td></tr></tfoot>
+    </table>
+  </div>
+  <div class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100 font-semibold text-slate-700">आयोजना बैंकको अवस्था — वडाअनुसार</div>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">वडा</th><th class="px-3 py-2 text-right font-medium">जम्मा माग</th><th class="px-3 py-2 text-right font-medium">लागत</th><th class="px-3 py-2 text-right font-medium">तयार (MTEF कुरेको)</th><th class="px-3 py-2 text-right font-medium">MTEF मा</th><th class="px-3 py-2 text-right font-medium">बजेट पाएको</th><th class="px-3 py-2 text-right font-medium">स्थगित / अस्वीकृत</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for r in ward_rows %}<tr><td class="px-4 py-2">वडा {{ r.w.name|to_nepali_number }}</td><td class="px-3 py-2 text-right">{{ r.n|to_nepali_number }}</td><td class="px-3 py-2 text-right">{{ r.cost|money:0 }}</td><td class="px-3 py-2 text-right">{{ r.ready|to_nepali_number }}</td><td class="px-3 py-2 text-right">{{ r.mtef|to_nepali_number }}</td><td class="px-3 py-2 text-right text-emerald-700">{{ r.funded|to_nepali_number }}</td><td class="px-3 py-2 text-right">{{ r.held|to_nepali_number }}</td></tr>
+      {% empty %}<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">आयोजना बैंक खाली छ।</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

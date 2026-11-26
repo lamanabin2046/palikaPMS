@@ -1,6 +1,6 @@
 from django.urls import path
 from .import views
-from . import views_app, views_budget, views_firms, views_mb, views_minor, views_sanstha, views_field, views_revenue, views_dashboard, views_deductions, views_guarantees, views_outputs, views_sectors
+from . import views_app, views_budget, views_firms, views_mb, views_minor, views_sanstha, views_field, views_revenue, views_dashboard, views_deductions, views_guarantees, views_outputs, views_sectors, views_bank, views_mtef
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -122,4 +122,30 @@ urlpatterns = [
     # ================= बैंक ग्यारेन्टी =================
     path('Guarantees/Performance/', views_guarantees.performance_guarantees, name='performance_guarantees'),
     path('Guarantees/Advance/', views_guarantees.advance_guarantees, name='advance_guarantees'),
+
+    # ---- योजना तर्जुमा: आयोजना बैंक, MTEF ----
+    path('Bank/', views_bank.bank_list, name='bank_list'),
+    path('Bank/add/', views_bank.bank_add, name='bank_add'),
+    path('Bank/import/', views_bank.bank_import, name='bank_import'),
+    path('Bank/WardPriority/', views_bank.ward_priority, name='bank_ward_priority'),
+    path('Bank/Outside/', views_bank.outside_bank, name='bank_outside'),
+    path('Bank/Codes/', views_bank.codes_pending, name='bank_codes'),
+    path('Bank/Convert/', views_bank.convert, name='bank_convert'),
+    path('Bank/Settings/', views_bank.plan_settings, name='plan_settings'),
+    path('Bank/Report/', views_mtef.plan_report, name='plan_report'),
+    path('Bank/Cycle/', views_mtef.plan_cycle, name='plan_cycle'),
+    path('Bank/<int:bid>/', views_bank.bank_detail, name='bank_detail'),
+    path('Bank/<int:bid>/edit/', views_bank.bank_edit, name='bank_edit'),
+    path('Bank/<int:bid>/technical/', views_bank.technical, name='bank_technical'),
+    path('Bank/<int:bid>/score/', views_bank.score, name='bank_score'),
+    path('Bank/<int:bid>/decide/', views_bank.decide, name='bank_decide'),
+    path('Bank/<int:bid>/print/', views_bank.bank_print, name='bank_print'),
+    path('Bank/<int:bid>/mtef/', views_mtef.bank_to_mtef, name='bank_to_mtef'),
+    path('MTEF/', views_mtef.mtef_list, name='mtef_list'),
+    path('Plan/Revenue/', views_mtef.revenue_current, name='revenue_current'),
+    path('MTEF/<int:pid>/revenue/', views_mtef.mtef_revenue, name='mtef_revenue'),
+    path('MTEF/<int:pid>/', views_mtef.mtef_plan, name='mtef_plan'),
+    path('MTEF/<int:pid>/add/', views_mtef.mtef_add, name='mtef_add'),
+    path('MTEF/<int:pid>/approve/', views_mtef.mtef_approve, name='mtef_approve'),
+    path('MTEF/<int:pid>/send/', views_mtef.mtef_send, name='mtef_send'),
 ]

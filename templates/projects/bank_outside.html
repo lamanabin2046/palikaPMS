@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}बैंक बाहिरका योजना{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-box-archive"></i> आयोजना बैंक</p>
+      <h1 class="text-xl font-bold text-slate-800">बैंक बाहिरका योजना — आ.व. {{ fy.name|default:"—" }}</h1>
+      <p class="text-sm text-slate-500">आयोजना बैंकमा नजोडिएका वार्षिक योजना · {{ rows|length|to_nepali_number }} योजना, {{ no_reason|to_nepali_number }} मा कारण छैन</p></div>
+    <div class="flex gap-2">
+      <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy and x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endfor %}</select></form>
+      <a href="{% url 'bank_list' %}" class="btn-secondary"><i class="fas fa-arrow-left"></i> आयोजना बैंक</a>
+    </div>
+  </div>
+  <form method="post" class="card overflow-hidden">{% csrf_token %}<input type="hidden" name="fiscalyear" value="{{ fy.id }}">
+    {% if can and rows %}
+    <div class="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center gap-2 text-sm">
+      <label class="flex items-center gap-1"><input type="checkbox" onclick="document.querySelectorAll('[name=pid]').forEach(c=>c.checked=this.checked)"> सबै</label>
+      <button name="act" value="link" class="btn-chip-brand"><i class="fas fa-link"></i> छानिएकालाई बैंकमा दर्ता गरी जोड्ने</button>
+      <span class="text-slate-400">वा</span>
+      <input name="reason" class="form-input !w-72 !py-1.5" placeholder="बैंक बाहिरबाट आएको कारण">
+      <button name="act" value="reason" class="btn-chip-slate">कारण राख्ने</button>
+    </div>{% endif %}
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr>{% if can %}<th class="px-3 py-2 w-8"></th>{% endif %}<th class="px-3 py-2 text-left font-medium">योजना</th><th class="px-3 py-2 text-left font-medium">वडा</th><th class="px-3 py-2 text-left font-medium">क्षेत्र / विधि</th><th class="px-3 py-2 text-right font-medium">बजेट</th><th class="px-3 py-2 text-left font-medium">कारण</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for p in rows %}<tr>
+        {% if can %}<td class="px-3 py-2"><input type="checkbox" name="pid" value="{{ p.id }}"></td>{% endif %}
+        <td class="px-3 py-2">{{ p.name }}{% if p.carried_from %} <span class="text-xs text-slate-400">(क्रमागत)</span>{% endif %}</td>
+        <td class="px-3 py-2">{{ p.ward.name|default:"—" }}</td>
+        <td class="px-3 py-2 text-xs text-slate-500">{{ p.sector.name|default:"—" }} · {{ p.procurement_type.name|default:"विधि नतोकिएको" }}</td>
+        <td class="px-3 py-2 text-right">{{ p.budget|money:0 }}</td>
+        <td class="px-3 py-2 text-xs {% if p.outside_bank_reason %}text-slate-600{% else %}text-amber-700{% endif %}">{{ p.outside_bank_reason|default:"कारण छैन" }}</td>
+      </tr>{% empty %}<tr><td colspan="6" class="px-4 py-10 text-center text-emerald-700"><i class="fas fa-circle-check"></i> यो आ.व. का सबै योजना आयोजना बैंकसँग जोडिएका छन्।</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </form>
+</div>
+{% endblock %}

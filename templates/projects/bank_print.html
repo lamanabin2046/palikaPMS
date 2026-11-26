@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load letters outputs nepali_date %}
+<html lang="ne">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>आयोजना प्रोफाइल — {{ b.code }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @page { size: A4; margin: 18mm 16mm 16mm 22mm; }
+    body { font-family: 'Noto Sans Devanagari', sans-serif; color: #1c1c1c; background: #eef1f5; font-size: 13.5px; line-height: 1.7; }
+    .sheet { background: #fff; max-width: 210mm; margin: 24px auto; padding: 18mm 16mm 18mm 22mm; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+    .title { font-weight: 800; text-align: center; font-size: 17px; margin: 8px 0 12px; }
+    h3 { font-size: 14px; margin: 14px 0 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 4px 0 10px; }
+    th, td { border: 1px solid #555; padding: 4px 7px; vertical-align: top; text-align: left; }
+    th { background: #f3f4f6; width: 32%; font-weight: 600; }
+    td.r { text-align: right; }
+    .sign { display: flex; justify-content: space-between; margin-top: 48px; gap: 16px; text-align: center; }
+    .sign div { flex: 1; border-top: 1px dotted #333; padding-top: 4px; }
+    .noprint { text-align: center; margin: 12px; }
+    @media print { body { background: #fff; } .sheet { margin: 0; padding: 0; box-shadow: none; max-width: none; } .noprint { display: none; } }
+  </style>
+</head>
+<body>
+<div class="noprint"><button onclick="window.print()" style="padding:6px 16px">प्रिन्ट गर्नुहोस्</button></div>
+<div class="sheet">
+  {% include 'includes/letterhead.html' with branch="(योजना शाखा)" %}
+  <p class="title">आयोजना बैंक — आयोजना प्रोफाइल</p>
+  <table>
+    <tr><th>बैंक नं.</th><td>{{ b.code }}</td></tr>
+    <tr><th>आयोजनाको नाम</th><td><b>{{ b.name }}</b></td></tr>
+    <tr><th>वडा / स्थान</th><td>{% if b.ward %}वडा नं. {{ b.ward.name|to_nepali_number }}{% endif %}{% if b.location %}, {{ b.location }}{% endif %}</td></tr>
+    <tr><th>क्षेत्र / उपक्षेत्र</th><td>{{ b.sector.name|default:"—" }}{% if b.subsector %} › {{ b.subsector.name }}{% endif %}</td></tr>
+    <tr><th>प्रकृति / अवधि</th><td>{{ b.get_nature_display }} · {{ b.duration_years|to_nepali_number }} वर्ष</td></tr>
+    <tr><th>विवरण / भौतिक लक्ष्य</th><td>{{ b.description|default:"—"|linebreaksbr }}</td></tr>
+    <tr><th>आवश्यकता / औचित्य</th><td>{{ b.need|default:"—"|linebreaksbr }}</td></tr>
+    <tr><th>माग</th><td>{{ b.get_source_display }}{% if b.requested_by %} — {{ b.requested_by }}{% endif %}{% if b.request_ref %} ({{ b.request_ref }}){% endif %}</td></tr>
+    <tr><th>लाभान्वित</th><td>{% if b.population %}{{ b.households|default:0|to_nepali_number }} घरधुरी, {{ b.population|to_nepali_number }} जना — महिला {{ b.women|default:0|to_nepali_number }}, दलित / सीमान्तकृत {{ b.marginalized|default:0|to_nepali_number }}{% else %}—{% endif %}</td></tr>
+    <tr><th>लागत</th><td>प्रस्ताव रु. {{ b.proposed_cost|money:0 }}{% if b.tech_cost %} · इन्जिनियर अनुमान रु. {{ b.tech_cost|money:0 }}{% endif %}{% if b.cost_share_pct %} · जनसहभागिता {{ b.cost_share_pct|floatformat:0|to_nepali_number }}%{% endif %}</td></tr>
+    {% if b.ward_rank %}<tr><th>वडा प्राथमिकता</th><td>क्रम {{ b.ward_rank|to_nepali_number }} · {{ b.ward_approver }} · {{ b.ward_approved_at|bs }}</td></tr>{% endif %}
+  </table>
+  <h3>प्राविधिक जाँच</h3>
+  <table>{% for lbl, ok in checks %}<tr><th>{{ lbl }}</th><td>{% if ok %}✓ छ{% else %}✗ छैन{% endif %}</td></tr>{% endfor %}
+    {% if b.tech_note %}<tr><th>टिप्पणी</th><td>{{ b.tech_note }}</td></tr>{% endif %}
+    {% if b.tech_by %}<tr><th>जाँच गर्ने</th><td>{{ b.tech_by }} · {{ b.tech_at|bs }}</td></tr>{% endif %}</table>
+  {% if b.score is not None %}
+  <h3>मूल्याङ्कन अङ्क — {{ b.score|floatformat:1|to_nepali_number }} / {{ max_score|to_nepali_number }}</h3>
+  <table>{% for r in score_rows %}<tr><th>{{ r.c.name }}</th><td class="r">{{ r.v|default:"—"|floatformat:1|to_nepali_number }} / {{ r.c.weight|to_nepali_number }}</td></tr>{% endfor %}</table>
+  {% endif %}
+  <h3>MTEF कोड</h3>
+  <table>
+    <tr><th>प्राथमिकता</th><td>{{ b.get_priority_display|default:"—" }}</td></tr>
+    <tr><th>रणनीतिक स्तम्भ / कार्यक्रम</th><td>{{ b.pillar.name|default:"—" }}{% if b.program %} › {{ b.program.name }}{% endif %}</td></tr>
+    <tr><th>दिगो विकास लक्ष्य</th><td>{% if b.sdg %}SDG {{ b.sdg|to_nepali_number }}{% else %}—{% endif %}</td></tr>
+    <tr><th>लैङ्गिक / जलवायु</th><td>{{ b.get_gender_display|default:"—" }} / {{ b.get_climate_display|default:"—" }}</td></tr>
+  </table>
+  {% if lines %}<h3>मध्यकालीन खर्च संरचना</h3>
+  <table><tr><th style="width:auto">MTEF</th><th style="width:auto">वर्ष १</th><th style="width:auto">वर्ष २</th><th style="width:auto">वर्ष ३</th></tr>
+    {% for ln in lines %}<tr><td>{{ ln.plan }} ({{ ln.plan.get_status_display }})</td><td class="r">{{ ln.y1|money:0 }}</td><td class="r">{{ ln.y2|money:0 }}</td><td class="r">{{ ln.y3|money:0 }}</td></tr>{% endfor %}</table>{% endif %}
+  <p>अवस्था: <b>{{ summary.current_label }}</b>{% if b.hold %} — {{ b.hold_reason }}{% endif %}</p>
+  <div class="sign"><div>तयार गर्ने</div><div>जाँच गर्ने</div><div>स्वीकृत गर्ने</div></div>
+</div>
+</body>
+</html>

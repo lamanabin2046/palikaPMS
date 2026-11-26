@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load outputs nepali_date %}
+{% block title %}MTEF {{ plan }}{% endblock %}
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <p class="text-xs font-medium text-brand-700"><a href="{% url 'mtef_list' %}"><i class="fas fa-layer-group"></i> मध्यकालीन खर्च संरचना</a></p>
+      <h1 class="text-2xl font-bold text-slate-800">आ.व. {{ plan.start_fy.name }} – {{ plan.y3_name }}</h1>
+      <p class="text-sm text-slate-500">
+        {% if plan.status == 'approved' %}<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fas fa-lock"></i> सभाबाट पारित</span> {{ plan.approval_ref }} · {{ plan.approved_at|bs }}
+        {% elif plan.status == 'draft' %}<span class="badge bg-amber-50 text-amber-700 border border-amber-200">मस्यौदा</span>
+        {% else %}<span class="badge bg-brand-50 text-brand-700 border border-brand-200">{{ plan.get_status_display }}</span>{% endif %}
+        {% if plan.committee_ref %} · समिति: {{ plan.committee_ref }}{% endif %}{% if plan.exec_ref %} · कार्यपालिका: {{ plan.exec_ref }}{% endif %}
+        {% if plan.sent_at %} · बजेटमा पठाइएको {{ plan.sent_at|bs }}{% endif %}
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="?export=xlsx" class="btn-secondary"><i class="fas fa-file-excel"></i> Excel (MTEF ढाँचा)</a>
+      <button onclick="window.print()" class="btn-secondary"><i class="fas fa-print"></i> प्रिन्ट</button>
+      <button class="{% if plan.status != 'approved' %}btn-primary{% else %}btn-secondary{% endif %}" hx-get="{% url 'mtef_approve' plan.id %}" hx-target="#app-modal-body"><i class="fas fa-stamp"></i> {% if plan.status == 'approved' %}निर्णय विवरण{% elif plan.status == 'draft' %}समितिको सिफारिस{% elif plan.status == 'recommended' %}कार्यपालिकाको स्वीकृति{% else %}सभाबाट पारित{% endif %}</button>
+      {% if can_send %}<a href="{% url 'mtef_send' plan.id %}" class="btn-primary"><i class="fas fa-arrow-right-to-bracket"></i> वार्षिक बजेटमा पठाउने</a>{% endif %}
+    </div>
+  </div>
+
+  {% if problems %}<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 space-y-0.5">{% for p in problems %}<p class="text-sm text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p }}</p>{% endfor %}</div>{% endif %}
+  {% if warnings %}<details class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" {% if warnings|length <= 4 %}open{% endif %}><summary class="cursor-pointer"><i class="fas fa-triangle-exclamation"></i> {{ warnings|length|to_nepali_number }} चेतावनी</summary>
+    <ul class="mt-2 space-y-0.5 text-xs">{% for w in warnings %}<li>• {{ w }}</li>{% endfor %}</ul></details>{% endif %}
+
+  {# ---------- १. स्रोत सीमा ---------- #}
+  <form method="post" class="card overflow-hidden" id="ceilings">{% csrf_token %}<input type="hidden" name="act" value="ceilings">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between"><p class="font-semibold text-slate-700">१. स्रोत सीमा <a href="{% url 'mtef_revenue' plan.id %}" class="ml-2 text-xs font-normal text-brand-700"><i class="fas fa-coins"></i> विस्तृत स्रोत अनुमान र वडा सीमा →</a></p>
+      {% if can %}<button class="btn-chip-brand"><i class="fas fa-floppy-disk"></i> सुरक्षित</button>{% endif %}</div>
+    <div class="px-5 py-3 border-b border-slate-100 text-sm flex flex-wrap items-center gap-2">
+      <label class="text-slate-600">स्रोत अनुमान तथा बजेट सीमा निर्धारण समितिको निर्णय:</label>
+      {% if can %}<input name="resource_ref" value="{{ plan.resource_ref }}" class="form-input !py-1" style="max-width:26rem" placeholder="जस्तै: निर्णय नं. १, २०८२-१२-१५">{% else %}<b>{{ plan.resource_ref|default:"—" }}</b>{% endif %}
+    </div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">स्रोत</th>{% for y in plan.years %}<th class="px-3 py-2 text-right font-medium">आ.व. {{ y }}</th>{% endfor %}</tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for c in ceilings %}<tr><td class="px-4 py-1.5">{{ c.head.name }}</td>
+        {% if can %}<td class="px-2 py-1.5"><input name="c{{ c.id }}_y1" value="{{ c.y1|floatformat:0 }}" class="form-input text-right !py-1"></td><td class="px-2 py-1.5"><input name="c{{ c.id }}_y2" value="{{ c.y2|floatformat:0 }}" class="form-input text-right !py-1"></td><td class="px-2 py-1.5"><input name="c{{ c.id }}_y3" value="{{ c.y3|floatformat:0 }}" class="form-input text-right !py-1"></td>
+        {% else %}<td class="px-3 py-1.5 text-right">{{ c.y1|money:0 }}</td><td class="px-3 py-1.5 text-right">{{ c.y2|money:0 }}</td><td class="px-3 py-1.5 text-right">{{ c.y3|money:0 }}</td>{% endif %}</tr>{% endfor %}
+      <tr class="bg-slate-50"><td class="px-4 py-2">कुल स्रोत</td>{% for k in t.values %}<td class="px-3 py-2 text-right">{{ k.resources|money:0 }}</td>{% endfor %}</tr>
+      <tr class="text-slate-600"><td class="px-4 py-1.5">− चालु खर्च <a href="{% url 'mtef_revenue' plan.id %}" class="text-xs text-brand-700">(स्रोत अनुमानमा सच्याउनुहोस्)</a></td>{% for k in t.values %}<td class="px-3 py-1.5 text-right">{{ k.recurrent|money:0 }}</td>{% endfor %}</tr>
+      <tr class="bg-slate-50 font-semibold"><td class="px-4 py-2">= पुँजीगत बजेट सीमा</td><td class="px-3 py-2 text-right">{{ t.y1.cap|money:0 }}</td><td class="px-3 py-2 text-right">{{ t.y2.cap|money:0 }}</td><td class="px-3 py-2 text-right">{{ t.y3.cap|money:0 }}</td></tr>
+      <tr><td class="px-4 py-2 text-xs text-slate-500">प्रयोग (प्रतिबद्धता + नयाँ)</td>
+        {% for k in t.values %}<td class="px-3 py-2">
+          <div style="height:8px;background:#e2e8f0;border-radius:9px;overflow:hidden"><div style="height:8px;width:{% if k.pct is None %}0{% elif k.pct > 100 %}100{% else %}{{ k.pct }}{% endif %}%;background:{% if k.pct and k.pct > 100 %}#dc2626{% elif k.pct and k.pct > 90 %}#f59e0b{% else %}#2856eb{% endif %}"></div></div>
+          <div class="text-[11px] text-right mt-0.5 {% if k.left < 0 %}text-rose-600 font-semibold{% else %}text-slate-500{% endif %}">{{ k.used|money:0 }}{% if k.pct is not None %} ({{ k.pct|to_nepali_number }}%){% endif %} · बाँकी {{ k.left|money:0 }}</div></td>{% endfor %}</tr>
+      </tbody></table></div>
+  </form>
+
+  <form method="post" id="lines">{% csrf_token %}<input type="hidden" name="act" value="lines">
+  {# ---------- २. प्रतिबद्धता ---------- #}
+  <div class="card overflow-hidden mb-5">
+    <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+      <div><p class="font-semibold text-slate-700">२. प्रतिबद्धता — पहिलो दाबी <span class="text-xs font-normal text-slate-500">({{ commit|length|to_nepali_number }}) क्रमागत र पहिलो वर्षको बजेटमा परिसकेका</span></p></div>
+      {% if can %}<button form="refresh-form" class="btn-chip-slate"><i class="fas fa-rotate"></i> प्रतिबद्धता ताजा गर्ने</button>{% endif %}
+    </div>
+    {% include 'projects/_mtef_lines.html' with rows=commit %}
+  </div>
+  {# ---------- ३. नयाँ चयन ---------- #}
+  <div class="card overflow-hidden" id="new">
+    <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+      <p class="font-semibold text-slate-700">३. नयाँ चयन — आयोजना बैंकबाट <span class="text-xs font-normal text-slate-500">({{ new|length|to_nepali_number }}) · बैंकमा तयार बाँकी {{ ready_n|to_nepali_number }}</span></p>
+      {% if can %}<div class="flex gap-2"><button type="button" class="btn-chip-brand" hx-get="{% url 'mtef_add' plan.id %}" hx-target="#app-modal-body"><i class="fas fa-plus"></i> बैंकबाट थप्ने</button>
+        <button class="btn-chip-slate"><i class="fas fa-floppy-disk"></i> रकम सुरक्षित</button></div>{% endif %}
+    </div>
+    {% include 'projects/_mtef_lines.html' with rows=new %}
+  </div>
+  </form>
+  <form method="post" id="refresh-form">{% csrf_token %}<input type="hidden" name="act" value="refresh"></form>
+
+  {# ---------- ४. सारांश ---------- #}
+  <div class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center gap-2">
+      <p class="font-semibold text-slate-700 mr-2">४. सारांश</p>
+      {% for k, v in dims %}<a href="?dim={{ k }}#summary" class="rounded-full px-3 py-1 text-xs border {% if dim == k %}bg-brand-600 text-white border-brand-600{% else %}border-slate-300 text-slate-600{% endif %}">{{ v }}</a>{% endfor %}
+    </div>
+    <table class="w-full text-sm" id="summary">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">समूह</th><th class="px-3 py-2 text-right font-medium">आयोजना</th>{% for y in plan.years %}<th class="px-3 py-2 text-right font-medium">{{ y }}</th>{% endfor %}<th class="px-3 py-2 font-medium" style="width:22%">पहिलो वर्षको हिस्सा</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for g in summary %}<tr><td class="px-4 py-2 {% if g.label == 'कोड नभएको' %}text-amber-700{% endif %}">{{ g.label }}</td><td class="px-3 py-2 text-right">{{ g.n|to_nepali_number }}</td>
+        <td class="px-3 py-2 text-right">{{ g.y1|money:0 }}</td><td class="px-3 py-2 text-right">{{ g.y2|money:0 }}</td><td class="px-3 py-2 text-right">{{ g.y3|money:0 }}</td>
+        <td class="px-3 py-2"><div class="flex items-center gap-2"><div style="flex:1;height:7px;background:#e2e8f0;border-radius:9px"><div style="height:7px;border-radius:9px;background:#2856eb;width:{{ g.pct }}%"></div></div><span class="text-xs">{{ g.pct|to_nepali_number }}%</span></div></td></tr>
+      {% empty %}<tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">आयोजना छैन।</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
