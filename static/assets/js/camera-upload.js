@@ -116,8 +116,18 @@
       b.type = "button";
       b.className = "cam-upload-btn";
       b.innerHTML = '<i class="fas fa-camera"></i> क्यामेराबाट खिच्नुहोस्';
-      css(b, "display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;border-radius:8px;border:1px solid #bccaee;background:#eef2fb;color:#223a8b;font:600 12px inherit;cursor:pointer");
+      css(b, "display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;border-radius:8px;border:1px solid #bccaee;background:#eef2fb;color:#223a8b;font-size:12px;font-weight:600;font-family:inherit;line-height:1.4;cursor:pointer");
       b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); open(inp); });
+      // नयाँ अपलोड बक्सभित्र: सानो क्यामेरा आइकन मात्र (बक्सको दायाँ)
+      var zone = inp.closest(".upload-zone");
+      if (zone) {
+        b.innerHTML = '<i class="fas fa-camera"></i>';
+        b.title = "क्यामेराबाट खिच्नुहोस्";
+        b.setAttribute("aria-label", "क्यामेराबाट खिच्नुहोस्");
+        css(b, "display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;border-radius:10px;border:1px solid #dce4f6;background:#fff;color:#2a47a3;font-size:14px;cursor:pointer");
+        zone.appendChild(b);
+        return;
+      }
       // लुकाइएको / पारदर्शी फिल्ड (ड्र्याग-ड्रप label भित्र) भए त्यो label पछि
       var hidden = inp.classList.contains("hidden") || inp.classList.contains("sr-only") || getComputedStyle(inp).opacity === "0";
       var anchor = hidden ? (inp.closest("label") || inp.parentElement) : inp;

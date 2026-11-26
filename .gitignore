@@ -45,3 +45,6 @@ stderr.log
 
 # palika backups (projects/backup.py)
 backups/
+
+# Claude working files
+Claude outputs/

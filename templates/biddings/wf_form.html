@@ -74,8 +74,25 @@
               <textarea id="f-{{ fld.name }}" name="{{ fld.name }}" rows="2" class="form-input" {% if fld.required %}required{% endif %}>{{ fld.value }}</textarea>
               {% elif fld.kind == 'checkbox' %}
               <label class="flex items-start gap-2 text-sm mt-1"><input type="checkbox" name="{{ fld.name }}" value="1" class="mt-1" {% if fld.value %}checked{% endif %}> <span>{{ fld.hint }}</span></label>
+              {% elif fld.kind == 'tri' %}
+              <div class="tri-group grid grid-cols-3 rounded-xl border border-slate-200 bg-slate-50 p-1 gap-1 text-xs font-medium">
+                {% for o in fld.options %}
+                <label class="tri-opt tri-{{ o.0 }} cursor-pointer select-none rounded-lg px-2 py-2 text-center text-slate-600 transition">
+                  <input type="radio" name="{{ fld.name }}" value="{{ o.0 }}" class="sr-only" {% if o.0 == fld.value %}checked{% endif %}>
+                  <i class="fas {% if o.0 == 'yes' %}fa-check{% elif o.0 == 'na' %}fa-ban{% else %}fa-hourglass-half{% endif %} mr-1 opacity-70"></i>{{ o.1 }}
+                </label>
+                {% endfor %}
+              </div>
               {% elif fld.kind == 'file' %}
-              <input type="file" id="f-{{ fld.name }}" name="{{ fld.name }}" accept=".pdf,.jpg,.jpeg,.png" class="form-input file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:text-brand-700 file:px-3 file:py-1.5 file:text-xs file:font-semibold">
+              <label class="upload-zone group flex items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 cursor-pointer transition hover:border-brand-400 hover:bg-brand-50/50">
+                <span class="upload-ico shrink-0 w-10 h-10 rounded-lg bg-white border border-slate-200 text-brand-600 flex items-center justify-center shadow-sm transition group-hover:scale-105">
+                  <i class="fas fa-cloud-arrow-up"></i></span>
+                <span class="min-w-0 flex-1">
+                  <span class="upload-name block text-sm font-medium text-slate-700 truncate">फाइल छान्नुहोस् वा यहाँ तान्नुहोस्</span>
+                  <span class="upload-meta block text-[11px] text-slate-400">PDF, JPG, PNG</span>
+                </span>
+                <input type="file" id="f-{{ fld.name }}" name="{{ fld.name }}" accept=".pdf,.jpg,.jpeg,.png" class="sr-only">
+              </label>
               {% else %}
               <input type="text" id="f-{{ fld.name }}" name="{{ fld.name }}" value="{{ fld.value }}" {{ fld.attrs|safe }}
                      class="form-input {% if fld.readonly %}bg-slate-50 font-semibold text-brand-700{% endif %}" {% if fld.readonly %}readonly tabindex="-1"{% endif %} {% if fld.required %}required{% endif %}>
@@ -98,6 +115,34 @@
 {% endblock %}
 
 {% block script %}
+<style>
+  .tri-opt:has(input:checked){background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.08)}
+  .tri-yes:has(input:checked){color:#047857}
+  .tri-no:has(input:checked){color:#b45309}
+  .tri-na:has(input:checked){color:#475569}
+  .tri-opt:has(input:focus-visible),.upload-zone:has(input:focus-visible){outline:2px solid #6380cf;outline-offset:2px}
+  .upload-zone.is-drag{border-color:#3f5fbd;background:#eef2fb}
+  .upload-zone.has-file{border-style:solid;border-color:#a7f3d0;background:#ecfdf5}
+  .upload-zone.has-file .upload-ico{color:#047857;border-color:#a7f3d0}
+</style>
+<script>
+// अपलोड बक्स: छानिएको फाइलको नाम र साइज देखाउने, तानेर राख्न मिल्ने
+document.querySelectorAll('.upload-zone').forEach(function (z) {
+  var inp = z.querySelector('input[type=file]'), nm = z.querySelector('.upload-name'), mt = z.querySelector('.upload-meta'), ic = z.querySelector('.upload-ico i');
+  var n0 = nm.textContent, m0 = mt.textContent;
+  function show() {
+    var f = inp.files && inp.files[0];
+    z.classList.toggle('has-file', !!f);
+    nm.textContent = f ? f.name : n0;
+    mt.textContent = f ? (f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(f.size / 1024)) + ' KB') + ' · बदल्न फेरि थिच्नुहोस्' : m0;
+    ic.className = f ? (/\.pdf$/i.test(f.name) ? 'fas fa-file-pdf' : 'fas fa-file-image') : 'fas fa-cloud-arrow-up';
+  }
+  inp.addEventListener('change', show);
+  ['dragenter', 'dragover'].forEach(function (e) { z.addEventListener(e, function (ev) { ev.preventDefault(); z.classList.add('is-drag'); }); });
+  ['dragleave', 'drop'].forEach(function (e) { z.addEventListener(e, function () { z.classList.remove('is-drag'); }); });
+  z.addEventListener('drop', function (ev) { ev.preventDefault(); if (ev.dataTransfer.files.length) { inp.files = ev.dataTransfer.files; show(); } });
+});
+</script>
 <script>
 (function () {
   var form = document.getElementById('bid-wf-form');
@@ -142,4 +187,29 @@
   if (script === 'final' && !form.elements['final_amount'].value) calc();
 })();
 </script>
+{% if sub_tree %}{{ sub_tree|json_script:"sub-tree" }}
+<script>
+// उपक्षेत्र: छानिएको क्षेत्रका मात्र देखाउने
+(function () {
+  var tree = JSON.parse(document.getElementById('sub-tree').textContent);
+  var sec = document.getElementById('f-sector'), sub = document.getElementById('f-subsector');
+  if (!sec || !sub) return;
+  var cur = sub.value;
+  function fill() {
+    var items = tree[sec.value] || [];
+    sub.innerHTML = '';
+    var o0 = document.createElement('option'); o0.value = '';
+    o0.textContent = !sec.value ? '— पहिले क्षेत्र छान्नुहोस् —' : (items.length ? '— उपक्षेत्र छान्नुहोस् —' : '— यो क्षेत्रमा उपक्षेत्र छैन —');
+    sub.appendChild(o0);
+    items.forEach(function (it) {
+      var o = document.createElement('option'); o.value = it[0]; o.textContent = it[1];
+      if (String(it[0]) === String(cur)) o.selected = true;
+      sub.appendChild(o);
+    });
+    sub.disabled = !sec.value || !items.length;
+  }
+  sec.addEventListener('change', function () { cur = ''; fill(); });
+  fill();
+})();
+</script>{% endif %}
 {% endblock %}

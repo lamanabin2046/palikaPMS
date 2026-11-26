@@ -61,6 +61,8 @@ def mtef_list(request):
         _log(request, plan, "create", "नयाँ MTEF")
         messages.success(request, f"MTEF {plan} बन्यो — {bk.np(plan.lines.count())} आयोजना (प्रतिबद्धता र अघिल्लो MTEF बाट) सहित।"
                                   " स्रोत सीमा जाँचेर नयाँ आयोजना बैंकबाट थप्नुहोस्।")
+        if request.POST.get("next") == "revenue":          # स्रोत अनुमान पेजबाट सुरु गरिएको — त्यहीँ फर्काउने
+            return redirect("mtef_revenue", plan.id)
         return redirect("mtef_plan", plan.id)
     rows = [{"p": p, "t": mt.totals(p), "n": p.lines.count()} for p in plans]
     return render(request, "projects/mtef_list.html", {"rows": rows, "fys": fys, "can": "mtef.manage" in P,
@@ -74,6 +76,7 @@ def mtef_plan(request, pid):
         return redirect("unauthorized")
     plan = get_object_or_404(MTEFPlan.objects.select_related("start_fy"), id=pid)
     can = "mtef.manage" in P and plan.status == "draft"
+    mt.ensure_ceilings(plan)
     if request.method == "POST":
         if not can:
             messages.error(request, "स्वीकृत MTEF बदल्न मिल्दैन (वा अनुमति छैन)।")
@@ -136,7 +139,7 @@ def mtef_plan(request, pid):
         return _export(plan, rows)
     ceilings = list(plan.ceilings.select_related("head"))
     return render(request, "projects/mtef_plan.html", {
-        "plan": plan, "can": can, "P": P, "t": mt.totals(plan), "ceilings": ceilings,
+        "plan": plan, "can": can, "P": P, "t": mt.totals(plan), "ceilings": ceilings, "sector_rows": mt.sector_rows(plan),
         "commit": [r for r in rows if r["ln"].kind == "commitment"], "new": [r for r in rows if r["ln"].kind == "new"],
         "problems": problems, "warnings": warnings, "dim": dim, "dims": mt.DIMENSIONS, "summary": mt.summary(lines, dim),
         "can_approve": "mtef.approve" in P, "can_send": "mtef.manage" in P and plan.status == "approved",
@@ -453,6 +456,8 @@ def plan_cycle(request):
             exe["spent"] += Decimal(r["gross"] or 0)
             exe["done" if r["status"] in ("completed", "paid") else "running"] += 1
 
+    srows_c = mt.sector_rows(plan) if plan else []
+
     def btn(label, url, perm=None, primary=True, modal=False):
         if perm and not (P & ({perm} if isinstance(perm, str) else set(perm))):
             return None
@@ -480,7 +485,9 @@ def plan_cycle(request):
          "buttons": [btn("वडा प्राथमिकता", reverse("bank_ward_priority"), ("bank.ward_priority", "bank.view"))] if ward_on else []},
         {"title": "विषयगत समितिमा छलफल", "who": "विषयगत समिति, इन्जिनियर, योजना शाखा", "where": "आयोजना बैंक",
          "what": "प्राविधिक जाँच (DPR, जग्गा, वातावरण), १०० अङ्कमा मूल्याङ्कन, P1/P2 र SDG/लैङ्गिक/जलवायु कोड दिई “तयार” घोषणा। पालिका स्तरीय आयोजना यहीँ थपिन्छन्।",
-         "metric": f"जाँच बाँकी {bk.np(n_tech)} · अङ्क बाँकी {bk.np(n_score)} · तयार {bk.np(n_ready)}",
+         "metric": (f"{bk.np(sum(1 for r in srows_c if r['sc'].submitted_at))} / {bk.np(len(srows_c))} शाखाले पेश गरे · " if srows_c else "") +
+                   f"जाँच बाँकी {bk.np(n_tech)} · अङ्क बाँकी {bk.np(n_score)} · तयार {bk.np(n_ready)}",
+         "sectors": True,
          "buttons": [btn("जाँच / अङ्क बाँकी सूची", reverse("bank_list") + "?status=mine", ("bank.screen", "bank.manage"))]},
         {"title": "बजेट तथा कार्यक्रम तर्जुमा", "who": "बजेट तथा कार्यक्रम तर्जुमा समिति", "where": "MTEF",
          "what": "क्रमागत आयोजना पहिले, त्यसपछि तयार आयोजना अङ्कअनुसार ३ वर्षमा सीमाभित्र बाँड्ने। पहिलो वर्ष = वार्षिक बजेट मस्यौदा। समितिको सिफारिस प्रविष्ट।",
@@ -513,6 +520,7 @@ def plan_cycle(request):
         s_["state"] = "done" if i < current else ("current" if i == current else "pending")
     return render(request, "projects/plan_cycle.html", {
         "stages": stages, "after": after, "plan": plan, "plans": plans, "current": current, "ward_rows": ward_rows,
+        "sector_rows": srows_c,
         "after_state": "done" if plan and plan.sent_at else ("current" if current == 8 else "pending"),
     })
 
@@ -533,13 +541,14 @@ def revenue_current(request):
 @login_required
 def mtef_revenue(request, pid):
     """स्रोत अनुमान तथा बजेट सीमा: स्रोतअनुसार ३ वर्षको अनुमान → चालु खर्च घटाई पुँजीगत सीमा → वडा सीमा."""
-    from .models import ResourceHead
+    from .models import PlanLiability, ResourceHead
 
     P = user_perms(request.user)
     if not P & VIEW:
         return redirect("unauthorized")
     plan = get_object_or_404(MTEFPlan.objects.select_related("start_fy"), id=pid)
     can = "mtef.manage" in P and plan.status == "draft"
+    mt.ensure_ceilings(plan)
     wcs = mt.ward_ceilings(plan)
     if request.method == "POST":
         if not can:
@@ -565,12 +574,8 @@ def mtef_revenue(request, pid):
                             setattr(c, k, v)
                     c.basis = (request.POST.get(f"c{c.id}_basis") or "").strip()[:150]
                     c.save()
-                for k in ("y1", "y2", "y3"):
-                    v = amt(f"rec_{k}")
-                    if v is not None:
-                        setattr(plan, f"recurrent_{k}", v)
                 plan.resource_ref = (request.POST.get("resource_ref") or "").strip()[:200]
-                plan.save(update_fields=["recurrent_y1", "recurrent_y2", "recurrent_y3", "resource_ref"])
+                plan.save(update_fields=["resource_ref"])
             _log(request, plan, "update", "स्रोत अनुमान")
             (messages.warning if bad else messages.success)(
                 request, "स्रोत अनुमान सुरक्षित भयो।" + (f" {bk.np(bad)} कोठामा अङ्क नभएकाले छोडियो।" if bad else ""))
@@ -593,6 +598,43 @@ def mtef_revenue(request, pid):
             _log(request, plan, "update", "वडा सीमा")
             (messages.warning if bad else messages.success)(
                 request, "वडा सीमा सुरक्षित भयो — वडाहरूले यही सीमाभित्र प्राथमिकता तोक्छन्।" + (f" {bk.np(bad)} कोठा छोडियो।" if bad else ""))
+        elif act == "liabilities":
+            with transaction.atomic():
+                for k in ("y1", "y2", "y3"):
+                    v = amt(f"rec_{k}")
+                    if v is not None:
+                        setattr(plan, f"recurrent_{k}", v)
+                plan.save(update_fields=["recurrent_y1", "recurrent_y2", "recurrent_y3"])
+                for kind, x in mt.liabilities(plan).items():
+                    for k in ("y1", "y2", "y3"):
+                        v = amt(f"l_{kind}_{k}")
+                        if v is not None:
+                            setattr(x, k, v)
+                    x.note = (request.POST.get(f"l_{kind}_note") or "").strip()[:200]
+                    x.save()
+            _log(request, plan, "update", "दायित्व")
+            (messages.warning if bad else messages.success)(
+                request, "दायित्व सुरक्षित भयो — बाँकी रकम मात्र वडा र शाखामा बाँडिन्छ।" + (f" {bk.np(bad)} कोठा छोडियो।" if bad else ""))
+        elif act == "sectors":
+            for sc in mt.sector_ceilings(plan).values():
+                v = amt(f"s{sc.id}")
+                if v is not None:
+                    sc.amount = v
+                sc.note = (request.POST.get(f"s{sc.id}_note") or "").strip()[:150]
+                sc.save(update_fields=["amount", "note"])
+            _log(request, plan, "update", "विषयगत क्षेत्र सीमा")
+            (messages.warning if bad else messages.success)(
+                request, "विषयगत क्षेत्र / शाखा सीमा सुरक्षित भयो — विषयगत समितिले यही सीमाभित्र आयोजना सिफारिस गर्छ।" + (f" {bk.np(bad)} कोठा छोडियो।" if bad else ""))
+        elif act == "unlock_sector":
+            sc = next((x for x in mt.sector_ceilings(plan).values() if str(x.id) == request.POST.get("sc")), None)
+            reason = (request.POST.get("reason") or "").strip()
+            if sc and reason:
+                sc.submitted_at, sc.submitted_by = None, ""
+                sc.save(update_fields=["submitted_at", "submitted_by"])
+                _log(request, plan, "update", f"{sc.sector.name} शाखाको सूची फेरि खोलियो: {reason}")
+                messages.warning(request, f"{sc.sector.name} शाखाको प्रस्ताव सूची फेरि खोलियो।")
+            else:
+                messages.error(request, "सूची खोल्दा कारण लेख्नुहोस्।")
         elif act == "unlock_ward":
             wc = next((w for w in wcs.values() if str(w.id) == request.POST.get("wc")), None)
             reason = (request.POST.get("reason") or "").strip()
@@ -622,7 +664,30 @@ def mtef_revenue(request, pid):
                           "pct": int(used * 100 / wc.amount) if wc.amount else None})
     ward_total = sum((bk.D(w.amount) for w in wcs.values()), ZERO)
     fresh = t["y1"]["cap"] - t["y1"]["commitment"]
+    liab_rows = [(k, lbl, mt.liabilities(plan)[k]) for k, lbl in PlanLiability.KINDS]
+    payable_sugg = mt.payable_suggestion(plan) if can else (ZERO, 0)
+    srows = mt.sector_rows(plan)
+    sector_total = sum((bk.D(r["sc"].amount) for r in srows), ZERO)
+    # सम्पादन गर्न नमिल्दा कारण र उपाय देखाउने
+    next_fy, lock_reason = "", ""
+    if not can:
+        if "mtef.manage" not in P:
+            lock_reason = "perm"
+        else:
+            lock_reason = "status"
+            import re
+            m = re.fullmatch(r"(\d{4})/(\d{2})", plan.start_fy.name.translate(str.maketrans("०१२३४५६७८९", "0123456789")))
+            newer = MTEFPlan.objects.filter(status="draft").exclude(id=plan.id).first()
+            if newer:
+                lock_reason, next_fy = "draft_exists", newer.id
+            elif m:
+                y = int(m.group(1)) + 1
+                next_fy = f"{y}/{str(y + 1)[-2:]}"
     return render(request, "projects/mtef_revenue.html", {
+        "lock_reason": lock_reason, "next_fy": next_fy, "liab_rows": liab_rows, "payable_sugg": payable_sugg,
+        "liab_total": {k: t[k]["recurrent"] + t[k]["liab"] + t[k]["commitment"] for k in ("y1", "y2", "y3")},
+        "avail": {k: t[k]["cap"] - t[k]["commitment"] for k in ("y1", "y2", "y3")},
+        "sector_rows": srows, "sector_total": sector_total, "palika_left": fresh - ward_total - sector_total,
         "plan": plan, "can": can, "groups": groups, "total": total, "t": t, "ward_rows": ward_rows,
         "ward_total": ward_total, "fresh": fresh, "palika_share": fresh - ward_total,
         "submitted": sum(1 for w in wcs.values() if w.submitted_at), "n_wards": len(wcs),

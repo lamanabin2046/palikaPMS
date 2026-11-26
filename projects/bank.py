@@ -42,8 +42,18 @@ def sdg_options():
     return [(i, f"{np(i)} — {n}") for i, n in SDG_NAMES.items()]
 
 
-CHECKS = (("dpr", "DPR / लागत अनुमान"), ("land", "जग्गा उपलब्ध"), ("env", "वातावरणीय पक्ष ठीक"),
+CHECKS = (("dpr", "DPR / लागत अनुमान"), ("land", "जग्गा उपलब्ध"), ("env", "वातावरणीय अध्ययन (IEE / EIA)"),
           ("feasible", "प्राविधिक रूपमा सम्भव"), ("no_duplicate", "दोहोरो छैन"))
+NA_OK = ("dpr", "land", "env")          # यी जाँच आयोजनाअनुसार "आवश्यक छैन" हुन सक्छन्
+
+
+def not_required(b):
+    return {k for k in (b.not_required or "").split(",") if k in NA_OK}
+
+
+def applicable_checks(b):
+    na = not_required(b)
+    return [(k, lbl) for k, lbl in CHECKS if k not in na]
 
 
 def D(v):
@@ -127,7 +137,8 @@ def suggest(b, c):
     if c.auto == "beneficiaries":
         return (w * min(Decimal(1), Decimal(pop) / 2000)).quantize(Decimal("0.1")) if pop else ZERO
     if c.auto == "readiness":
-        return (w * sum(1 for k, _l in CHECKS if getattr(b, k)) / len(CHECKS)).quantize(Decimal("0.1"))
+        ap = applicable_checks(b)              # "आवश्यक छैन" भनिएका जाँच गनिँदैनन्
+        return (w * sum(1 for k, _l in ap if getattr(b, k)) / len(ap)).quantize(Decimal("0.1")) if ap else w
     if c.auto == "cost":
         if not pop or not b.cost:
             return ZERO
@@ -238,8 +249,9 @@ def workflow(b, user=None, ex=None, lines=None):
                              primary=not b.tech_at))
     note = ""
     if b.tech_at:
-        ok = [lbl for k, lbl in CHECKS if getattr(b, k)]
-        note = f"{np(len(ok))}/{np(len(CHECKS))} तयारी" + (f" · लागत रु. {money(b.tech_cost)}" if b.tech_cost else "") + \
+        ap = applicable_checks(b)
+        ok = [lbl for k, lbl in ap if getattr(b, k)]
+        note = f"{np(len(ok))}/{np(len(ap))} तयारी" + (f" · लागत रु. {money(b.tech_cost)}" if b.tech_cost else "") + \
                (f" · {b.tech_by}" if b.tech_by else "")
     st["technical"] = {"done": bool(b.tech_at), "date": b.tech_at.date() if b.tech_at else None, "note": note, "actions": actions}
 

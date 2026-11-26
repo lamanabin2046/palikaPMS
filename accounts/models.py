@@ -31,6 +31,7 @@ class CustomUser(AbstractUser):
         (8, 'PALIKA ENGINEER'),
         (9, 'WARD CHAIRPERSON'),
         (10, 'ACCOUNT OFFICER'),
+        (11, 'SECTION (शाखा)'),
 
     )
     username = None

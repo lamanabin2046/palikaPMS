@@ -121,7 +121,7 @@
               {% if b.sector %}<span>{{ b.sector.name }}</span>{% endif %}
               {% if b.priority %}<span class="rounded-full px-2 py-0.5 {% if b.priority == 'P1' %}bg-brand-50 text-brand-700{% else %}bg-slate-100 text-slate-600{% endif %}">{{ b.priority }}</span>{% endif %}
               {% if b.sdg %}<span>SDG {{ b.sdg|to_nepali_number }}</span>{% endif %}
-              <span title="DPR, जग्गा, वातावरण">{% if b.dpr %}<span class="text-emerald-600">DPR✓</span>{% endif %} {% if b.land %}<span class="text-emerald-600">जग्गा✓</span>{% endif %}</span>
+              <span title="DPR, जग्गा, वातावरण">{% if b.dpr %}<span class="text-emerald-600">DPR✓</span>{% elif 'dpr' in b.not_required %}<span class="text-slate-400" title="DPR आवश्यक छैन">DPR—</span>{% endif %} {% if b.land %}<span class="text-emerald-600">जग्गा✓</span>{% endif %}</span>
               {% if b.converted %}<span class="rounded-full bg-slate-100 px-2 py-0.5">पुरानो</span>{% endif %}
             </div>
           </td>

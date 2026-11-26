@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}शाखाको प्रस्ताव — {{ sector.name }}{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">शाखाको आयोजना प्रस्ताव</h1>
+      <p class="text-sm text-slate-500">आफ्नो शाखा / क्षेत्रको बजेट सीमाभित्र आयोजना प्रस्ताव गरी पेश गर्नुहोस्। पेशपछि सूची लक हुन्छ र विषयगत समितिमा जान्छ।</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      {% if sectors|length > 1 %}
+      <form method="get"><select name="sector" class="form-select !w-auto" onchange="this.form.submit()" aria-label="क्षेत्र / शाखा">
+        {% for s in sectors %}<option value="{{ s.id }}" {% if s.id == sector.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></form>
+      {% endif %}
+      {% if can_add %}<a href="{% url 'bank_add' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary"><i class="fas fa-plus"></i> नयाँ प्रस्ताव</a>{% endif %}
+    </div>
+  </div>
+
+  {# ---------- सीमा कार्ड ---------- #}
+  <section class="card p-5" aria-labelledby="ceil-h">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="text-xs text-slate-500">{% if plan %}<span class="inline-flex items-center rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 font-semibold text-brand-700"><i class="far fa-calendar mr-1"></i>आ.व. {{ plan.years.0 }} को बजेट सीमा</span> <span class="ml-1">MTEF {{ plan }}</span>{% else %}MTEF बनेको छैन{% endif %}</p>
+        <h2 id="ceil-h" class="text-lg font-bold text-slate-800">{{ sector.name }}{% if sc.note %} <span class="text-sm font-normal text-slate-500">· {{ sc.note }}</span>{% endif %}</h2>
+      </div>
+      {% if sc.submitted_at %}<span class="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"><i class="fas fa-lock"></i> सूची पेश भयो · {{ sc.submitted_at|date:"Y-m-d" }}</span>
+      {% elif plan and plan.status != 'draft' %}<span class="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">MTEF “{{ plan.get_status_display }}” — पेश गर्ने समय सकियो</span>
+      {% else %}<span class="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-700">पेश गर्न बाँकी</span>{% endif %}
+    </div>
+    <div class="grid gap-3 mt-4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">आ.व. {% if plan %}{{ plan.years.0 }}{% endif %} को शाखा सीमा</p><p class="text-xl font-bold text-slate-800">{% if sc and sc.amount %}रु. {{ sc.amount|money:0 }}{% else %}<span class="text-base text-slate-400">तोकिएको छैन</span>{% endif %}</p></div>
+      <div class="rounded-xl border p-3 {% if over %}border-rose-200 bg-rose-50{% else %}border-slate-200{% endif %}"><p class="text-xs text-slate-500">प्रस्तावको जम्मा लागत</p><p class="text-xl font-bold {% if over %}text-rose-700{% else %}text-slate-800{% endif %}">रु. {{ used|money:0 }}</p></div>
+      <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">बाँकी</p><p class="text-xl font-bold {% if left < 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">{% if sc and sc.amount %}रु. {{ left|money:0 }}{% else %}—{% endif %}</p></div>
+    </div>
+    {% if pct is not None %}
+    <div class="mt-3 h-2.5 rounded-full bg-slate-100 overflow-hidden" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100" aria-label="सीमा प्रयोग">
+      <div class="h-2.5 {% if over %}bg-rose-500{% elif pct > 90 %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width:{{ pct }}%"></div></div>
+    {% endif %}
+    {% if over %}<p class="mt-2 text-sm text-rose-700"><i class="fas fa-triangle-exclamation"></i> प्रस्तावको जम्मा सीमाभन्दा बढी भयो — पेश गर्नुअघि केही प्रस्ताव घटाउनुहोस् वा लागत मिलाउनुहोस्।</p>{% endif %}
+    {% if sc and not sc.amount and plan and plan.status == 'draft' %}<p class="mt-2 text-sm text-slate-500"><i class="fas fa-circle-info"></i> योजना शाखाले अझै यो शाखाको सीमा तोकेको छैन। प्रस्ताव भने थप्न सकिन्छ।</p>{% endif %}
+  </section>
+
+  {# ---------- प्रस्ताव सूची ---------- #}
+  <section class="card overflow-hidden" aria-labelledby="list-h">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+      <h2 id="list-h" class="font-semibold text-slate-700">प्रस्तावहरू <span class="text-xs font-normal text-slate-500">· {{ items|length|to_nepali_number }} वटा</span></h2>
+    </div>
+    {% if items %}
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr>
+        <th class="px-4 py-2 text-left font-medium">बैंक नं.</th><th class="px-2 py-2 text-left font-medium">आयोजना</th>
+        <th class="px-2 py-2 text-right font-medium">लागत (रु.)</th><th class="px-2 py-2 text-left font-medium">अवस्था</th><th class="px-2 py-2"></th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for b in items %}
+        <tr>
+          <td class="px-4 py-2 font-mono text-xs text-slate-600">{{ b.code }}</td>
+          <td class="px-2 py-2"><p class="font-medium text-slate-800">{{ b.name }}</p>
+            <p class="text-[11px] text-slate-500">{% if b.subsector %}{{ b.subsector.name }}{% endif %}{% if b.ward %} · वडा {{ b.ward.name|to_nepali_number }}{% endif %}{% if b.duration_years > 1 %} · {{ b.duration_years|to_nepali_number }} वर्ष{% endif %}</p>
+            {% if b.entry_step %}<span class="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] text-orange-700"><i class="fas fa-clock-rotate-left mr-1"></i>चरण {{ b.entry_step|to_nepali_number }} मा थपिएको</span>{% endif %}</td>
+          <td class="px-2 py-2 text-right">{{ b.cost|money:0 }}{% if b.tech_cost %}<span class="block text-[10px] text-slate-400">इन्जिनियर अनुमान</span>{% endif %}</td>
+          <td class="px-2 py-2 text-xs">{% if b.ready_at %}<span class="text-emerald-700">तयार</span>{% elif b.scored_at %}<span class="text-brand-700">अङ्क दिइएको</span>{% elif b.tech_at %}<span class="text-brand-700">प्राविधिक जाँच भयो</span>{% else %}<span class="text-slate-500">प्रस्तावित</span>{% endif %}</td>
+          <td class="px-2 py-2 text-right"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="text-xs text-brand-700">हेर्ने</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr class="bg-slate-50 font-semibold"><td class="px-4 py-2" colspan="2">जम्मा</td><td class="px-2 py-2 text-right {% if over %}text-rose-700{% endif %}">{{ used|money:0 }}</td><td colspan="2"></td></tr></tfoot>
+    </table></div>
+    {% else %}
+    <p class="px-5 py-8 text-center text-sm text-slate-500">अहिलेसम्म प्रस्ताव छैन।{% if can_add %} “नयाँ प्रस्ताव” थिचेर आयोजना थप्नुहोस्।{% endif %}</p>
+    {% endif %}
+    {% if can_submit %}
+    <form method="post" hx-boost="false" class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3">{% csrf_token %}
+      <input type="hidden" name="sector" value="{{ sector.id }}">
+      <p class="text-xs text-slate-500">पेश गरेपछि यो शाखाबाट नयाँ प्रस्ताव थप्न मिल्दैन (योजना शाखाले मात्र खोल्न सक्छ)।</p>
+      <button class="btn-primary" {% if over or not items %}disabled title="सीमाभित्र र कम्तीमा एउटा प्रस्ताव हुनुपर्छ"{% endif %}><i class="fas fa-paper-plane"></i> सूची पेश गर्नुहोस्</button>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

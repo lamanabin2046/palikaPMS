@@ -128,6 +128,7 @@ urlpatterns = [
     path('Bank/add/', views_bank.bank_add, name='bank_add'),
     path('Bank/import/', views_bank.bank_import, name='bank_import'),
     path('Bank/WardPriority/', views_bank.ward_priority, name='bank_ward_priority'),
+    path('Bank/Section/', views_bank.section_priority, name='section_priority'),
     path('Bank/Outside/', views_bank.outside_bank, name='bank_outside'),
     path('Bank/Codes/', views_bank.codes_pending, name='bank_codes'),
     path('Bank/Convert/', views_bank.convert, name='bank_convert'),

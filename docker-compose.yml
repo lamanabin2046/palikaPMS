@@ -1,6 +1,9 @@
 # PostgreSQL for the Palika Project Management SaaS.
 # Start:  docker compose up -d
 # Uses port 5433 so it does not clash with GIWMS's database on 5432.
+# Same project name as the original folder, so this reuses the existing bpm-db container and its data.
+name: bagmatiprojectmanagement
+
 services:
   db:
     image: postgres:16

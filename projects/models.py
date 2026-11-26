@@ -999,9 +999,10 @@ class BankProject(models.Model):
     # प्राविधिक जाँच
     dpr = models.BooleanField("DPR / लागत अनुमान", default=False)
     land = models.BooleanField("जग्गा उपलब्ध", default=False)
-    env = models.BooleanField("वातावरणीय पक्ष ठीक", default=False)
+    env = models.BooleanField("वातावरणीय अध्ययन (IEE / EIA)", default=False)
     feasible = models.BooleanField("प्राविधिक रूपमा सम्भव", default=False)
     no_duplicate = models.BooleanField("दोहोरो छैन", default=False)
+    not_required = models.CharField("आवश्यक नपर्ने जाँच", max_length=60, blank=True)   # जस्तै "dpr,env" — सानो / सफ्टवेयर आयोजनामा DPR, IEE नचाहिने
     tech_cost = models.DecimalField("इन्जिनियरको लागत अनुमान", max_digits=16, decimal_places=2, null=True, blank=True)
     tech_note = models.TextField(blank=True)
     tech_by = models.CharField(max_length=200, blank=True)
@@ -1046,8 +1047,8 @@ class BankProject(models.Model):
 
 
 class BankDoc(models.Model):
-    KINDS = (("dpr", "DPR / लागत अनुमान"), ("land", "जग्गा प्रमाण"), ("decision", "माग / निर्णय"), ("photo", "फोटो"),
-             ("other", "अन्य"))
+    KINDS = (("dpr", "DPR / लागत अनुमान"), ("iee", "IEE / वातावरणीय अध्ययन"), ("land", "जग्गा प्रमाण"), ("decision", "माग / निर्णय"),
+             ("photo", "फोटो"), ("other", "अन्य"))
     bank = models.ForeignKey(BankProject, on_delete=models.CASCADE, related_name="docs")
     kind = models.CharField(max_length=10, choices=KINDS)
     file = models.FileField(upload_to="bank/")
@@ -1137,3 +1138,46 @@ class WardCeiling(models.Model):
     class Meta:
         unique_together = [("plan", "ward")]
         ordering = ["ward_id"]
+
+
+class SectorCeiling(models.Model):
+    """विषयगत क्षेत्र / शाखा स्तरीय बजेट सीमा (तर्जुमा चक्र चरण १) — पालिका स्तरीय रकम विषयगत समितिहरूमा बाँड्ने."""
+    plan = models.ForeignKey(MTEFPlan, on_delete=models.CASCADE, related_name="sector_ceilings")
+    sector = models.ForeignKey(Sector, on_delete=models.CASCADE, related_name="+")
+    amount = models.DecimalField("क्षेत्र सीमा", max_digits=16, decimal_places=2, default=0)
+    note = models.CharField("कैफियत", max_length=150, blank=True)
+    submitted_at = models.DateTimeField("शाखाले पेश गरेको", null=True, blank=True)
+    submitted_by = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        unique_together = [("plan", "sector")]
+        ordering = ["sector__sort", "sector_id"]
+
+
+class PlanLiability(models.Model):
+    """तर्जुमा चक्र चरण १: वडा र शाखामा बाँड्नुअघि छुट्याउने दायित्व (तलब भत्ता MTEFPlan.recurrent_* मा छ)."""
+    KINDS = (("matching", "समपूरक / विशेष अनुदान आयोजनाको पालिका हिस्सा"),
+             ("payable", "भुक्तानी बाँकी (गत वर्षका योजना)"),
+             ("ongoing", "क्रमागत आयोजना (आयोजना बैंक बाहिरका)"),
+             ("other", "अन्य अनिवार्य दायित्व (ऋण भुक्तानी आदि)"))
+    plan = models.ForeignKey(MTEFPlan, on_delete=models.CASCADE, related_name="liabilities")
+    kind = models.CharField(max_length=12, choices=KINDS)
+    y1 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    y2 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    y3 = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    note = models.CharField("कैफियत", max_length=200, blank=True)
+
+    class Meta:
+        unique_together = [("plan", "kind")]
+
+
+class SectionStaff(models.Model):
+    """विषयगत शाखा प्रमुख / कर्मचारी (भूमिका ११) — आफ्नो क्षेत्रको सीमाभित्र आयोजना प्रस्ताव गरी पेश गर्ने."""
+    admin = models.OneToOneField("accounts.CustomUser", on_delete=models.CASCADE)
+    sectors = models.ManyToManyField(Sector, related_name="section_staff", verbose_name="क्षेत्र / शाखा")
+    name = models.CharField(max_length=250)
+    mobile = models.CharField(max_length=250)
+    status = models.CharField(default="Active", null=True, max_length=200)
+
+    def __str__(self):
+        return self.name

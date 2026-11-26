@@ -22,6 +22,7 @@ ROLES = [
     ("8", "पालिका इन्जिनियर"),
     ("9", "वडा अध्यक्ष"),
     ("10", "लेखा अधिकृत"),
+    ("11", "विषयगत शाखा"),
 ]
 ROLE_LABEL = dict(ROLES)
 
@@ -142,6 +143,8 @@ DEFAULT_ROLE_PERMS = {
     "10": {"field.view", "dashboard.view", "uc.agreement_print", "uc.payment_print", "report.uc", "report.outputs",
            "bid.view", "bid.print", "quot.view", "quot.print", "minor.view", "minor.print", "retention.manage",
            "budget.view", "app.view", "rev.view", "rev.collect", "rev.print", "firm.view", "mb.view", "settings.tax"},
+    # विषयगत शाखा: आफ्नो क्षेत्रको सीमाभित्र आयोजना बैंकमा प्रस्ताव गरी पेश गर्ने
+    "11": {"bank.view", "bank.propose", "field.view"},
 }
 
 # इन्जिनियरले भर्न मिल्ने: लागत अनुमान, अन्तिम मूल्याङ्कन, भौतिक प्रगति; अरू सबै हेर्ने मात्र।

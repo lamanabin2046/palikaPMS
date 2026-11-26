@@ -32,9 +32,20 @@
             {% else %}<a href="{{ b.url }}" class="{% if b.primary and s.state != 'done' %}btn-chip-brand{% else %}btn-chip-slate{% endif %}">{{ b.label }}</a>{% endif %}
           {% endfor %}
         </div>
+        {% if s.sectors and sector_rows %}
+        <div class="mt-3 overflow-x-auto"><table class="w-full text-xs">
+          <thead><tr class="text-slate-500 text-left"><th class="py-1">विषयगत क्षेत्र</th><th class="text-right">आ.व. {{ plan.years.0 }} सीमा</th><th class="text-right">बैंकमा प्रस्ताव</th><th class="text-right">MTEF मा छानिएको</th><th class="w-32"></th></tr></thead>
+          <tbody>{% for r in sector_rows %}<tr class="border-t border-slate-100">
+            <td class="py-1">{{ r.sc.sector.name }}</td>
+            <td class="text-right">{% if r.sc.amount %}{{ r.sc.amount|money:0 }}{% else %}<span class="text-slate-400">तोकिएको छैन</span>{% endif %}</td>
+            <td class="text-right">{{ r.proposed|money:0 }}</td>
+            <td class="text-right {% if r.over %}text-red-600 font-semibold{% endif %}">{{ r.chosen|money:0 }}</td>
+            <td class="px-2">{% if r.pct is not None %}<div class="h-1.5 rounded bg-slate-100"><div class="h-1.5 rounded {% if r.over %}bg-red-500{% else %}bg-emerald-500{% endif %}" style="width:{{ r.pct }}%"></div></div>{% endif %}</td>
+          </tr>{% endfor %}</tbody></table></div>
+        {% endif %}
         {% if s.wards and ward_rows %}
         <div class="mt-3 overflow-x-auto"><table class="w-full text-xs">
-          <thead><tr class="text-slate-500 text-left"><th class="py-1">वडा</th><th class="text-right">सीमा</th><th class="text-right">प्रस्तावित</th><th class="w-32"></th><th>स्थिति</th></tr></thead>
+          <thead><tr class="text-slate-500 text-left"><th class="py-1">वडा</th><th class="text-right">आ.व. {{ plan.years.0 }} सीमा</th><th class="text-right">प्रस्तावित</th><th class="w-32"></th><th>स्थिति</th></tr></thead>
           <tbody>{% for r in ward_rows %}<tr class="border-t border-slate-100">
             <td class="py-1">वडा {{ r.wc.ward }}</td>
             <td class="text-right">{% if r.wc.amount %}{{ r.wc.amount|money:0 }}{% else %}<span class="text-slate-400">तोकिएको छैन</span>{% endif %}</td>

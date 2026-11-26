@@ -43,11 +43,24 @@ def _user_wards(user):
     return uw(user)
 
 
+def _user_sectors(user):
+    """विषयगत शाखा (भूमिका ११) का क्षेत्र; अरूका लागि None (सबै)."""
+    if getattr(user, "user_type", None) != "11":
+        return None
+    from .models import SectionStaff
+
+    st = SectionStaff.objects.filter(admin=user).first()
+    return list(st.sectors.values_list("id", flat=True)) if st else []
+
+
 def _scoped(request):
     qs = bk.queryset()
     wards = _user_wards(request.user)
     if wards is not None:
         qs = qs.filter(ward_id__in=wards)
+    sectors = _user_sectors(request.user)
+    if sectors is not None:                     # शाखाले आफ्नो क्षेत्रका पालिका स्तरीय आयोजना मात्र देख्छ
+        qs = qs.filter(sector_id__in=sectors).exclude(source="ward")
     return qs, wards
 
 
@@ -285,12 +298,16 @@ def _proposal_form(request, b):
     is_new = b.id is None
     errors = []
     wards = _user_wards(request.user)
+    my_sectors = _user_sectors(request.user)
+    if request.method == "POST" and my_sectors is not None:
+        request.POST = request.POST.copy()
+        request.POST["source"] = "section"            # शाखाको प्रस्ताव सधैँ "पालिका विषयगत शाखा"
     if request.method == "POST":
         f = Form(request)
         name = f.text("name", "आयोजनाको नाम")
         ward = Ward.objects.filter(id=request.POST.get("ward") or 0).first()
         sector = Sector.objects.filter(id=request.POST.get("sector") or 0).first()
-        sub = SubSector.objects.filter(id=request.POST.get("subsector") or 0).first()
+        sub = SubSector.objects.filter(id=request.POST.get("subsector") or 0, sector=sector).first() if sector else None
         fy = FiscalYear.objects.filter(id=request.POST.get("fiscalyear") or 0).first()
         cost = f.amount("proposed_cost", "प्रस्तावित लागत")
         share = f.amount("cost_share_pct", "जनसहभागिता %", required=False)
@@ -320,6 +337,8 @@ def _proposal_form(request, b):
             errors.append("आफ्नो वडाको आयोजना मात्र प्रस्ताव गर्न मिल्छ।")
         if sector is None:
             errors.append("क्षेत्र छान्नुहोस्।")
+        elif my_sectors is not None and sector.id not in my_sectors:
+            errors.append("आफ्नो शाखाको क्षेत्रमा मात्र प्रस्ताव गर्न मिल्छ।")
         if sub and sector and sub.sector_id != sector.id:
             errors.append("उपक्षेत्र छानिएको क्षेत्रको होइन।")
         if name and ward and BankProject.objects.filter(name=name, ward=ward, hold="").exclude(id=b.id).exists():
@@ -330,6 +349,9 @@ def _proposal_form(request, b):
         ward_locked = is_new and source == "ward" and ward is not None and mt.ward_locked(plan, ward.id)
         if ward_locked and not manage:
             errors.append(f"वडा {ward.name} को प्राथमिकता सूची पेश भइसकेको छ — थप्नुपरे पालिकाको योजना शाखामा अनुरोध गर्नुहोस्।")
+        sector_locked = is_new and source != "ward" and sector is not None and mt.sector_locked(plan, sector.id)
+        if sector_locked and not manage:
+            errors.append(f"{sector.name} शाखाको प्रस्ताव सूची पेश भइसकेको छ — थप्नुपरे पालिकाको योजना शाखामा अनुरोध गर्नुहोस्।")
         files = _uploads(request, {"doc_decision": "decision", "doc_photo": "photo"}, errors)
         if not errors:
             with transaction.atomic():
@@ -351,7 +373,7 @@ def _proposal_form(request, b):
                     # त्यसपछि (वा वडा लक भएपछि, वा प्रमुख/कार्यपालिका/सभाबाट चरण ३ देखि) थपिए "पछि थपिएको" चिनो.
                     step = min(mt.cycle_step(plan), 7) if plan else 2
                     normal_until = {"ward": 3, "mayor": 2, "executive": 2, "assembly": 2}.get(source, 4)
-                    if step > normal_until or ward_locked:
+                    if step > normal_until or ward_locked or sector_locked:
                         b.entry_step = max(step, 3)
                     bk.apply_sector_defaults(b)
                 elif old_cost != cost and b.scored_at:
@@ -367,11 +389,19 @@ def _proposal_form(request, b):
     ward_opts = [("", "—")] + [(str(w.id), f"वडा नं. {w.name}") for w in
                                (Ward.objects.filter(id__in=wards) if wards is not None else Ward.objects.all())]
     fy_default = b.fiscalyear_id or FiscalYear.objects.order_by("-name").values_list("id", flat=True).first()
-    sectors = [("", "— छान्नुहोस् —")] + [(str(s.id), s.name) for s in Sector.objects.filter(is_active=True)]
-    subs = [("", "—")] + [(str(s.id), f"{s.sector.name} › {s.name}") for s in SubSector.objects.select_related("sector")]
+    sec_qs = Sector.objects.filter(is_active=True)
+    if my_sectors is not None:
+        sec_qs = sec_qs.filter(id__in=my_sectors)
+    sectors = [("", "— छान्नुहोस् —")] + [(str(s.id), s.name) for s in sec_qs]
+    subs = [("", "—")] + [(str(s.id), s.name) for s in SubSector.objects.select_related("sector")]
+    sub_tree = {}                                    # क्षेत्र → उपक्षेत्र (छानिएको क्षेत्रका मात्र देखाउन)
+    for x in SubSector.objects.order_by("sort", "id"):
+        if getattr(x, "is_active", True) or x.id == b.subsector_id:
+            sub_tree.setdefault(str(x.sector_id), []).append([x.id, x.name])
     s1 = [
         F("name", "आयोजनाको नाम", v("name", b.name), wide=True, hint="जस्तै: जनता टोल–स्वास्थ्य चौकी सडक स्तरोन्नति"),
-        F("ward", "वडा", v("ward", str(b.ward_id or "")), kind="select", options=ward_opts),
+        F("ward", "वडा" if my_sectors is None else "वडा (आयोजना रहने स्थान, ऐच्छिक)", v("ward", str(b.ward_id or "")), kind="select",
+          options=ward_opts, required=my_sectors is None),
         F("location", "स्थान / टोल", v("location", b.location), required=False),
         F("fiscalyear", "प्रस्ताव गरिएको आ.व.", v("fiscalyear", str(fy_default or "")), kind="select",
           options=[(str(x.id), x.name) for x in FiscalYear.objects.order_by("-name")], required=False),
@@ -383,7 +413,8 @@ def _proposal_form(request, b):
         F("need", "आवश्यकता / औचित्य", v("need", b.need), kind="textarea", wide=True, required=False),
     ]
     s2 = [
-        F("source", "माग गर्ने", v("source", b.source), kind="select", options=list(BankProject.SOURCE)),
+        F("source", "माग गर्ने", v("source", b.source), kind="select",
+          options=[("section", "पालिका विषयगत शाखा")] if my_sectors is not None else list(BankProject.SOURCE)),
         F("requested_by", "बस्ती / टोल / संस्था", v("requested_by", b.requested_by), required=False),
         F("request_ref", "माग निर्णय / मिति", v("request_ref", b.request_ref), required=False, hint="जस्तै: बस्ती भेला निर्णय, २०८२-१०-०५"),
         F("households", "लाभान्वित घरधुरी", v("households", b.households or ""), required=False),
@@ -400,7 +431,7 @@ def _proposal_form(request, b):
     ]
     return _render_form(request, b, {
         "title": "नयाँ आयोजना प्रस्ताव" if is_new else f"प्रस्ताव सम्पादन — {b.code}", "icon": "lightbulb", "errors": errors,
-        "submit": "आयोजना बैंकमा सुरक्षित गर्नुहोस्", "upload": True,
+        "submit": "आयोजना बैंकमा सुरक्षित गर्नुहोस्", "upload": True, "sub_tree": sub_tree,
         "sections": [{"title": "आयोजना", "icon": "diagram-project", "fields": s1},
                      {"title": "माग र लाभान्वित", "icon": "people-group", "fields": s2},
                      {"title": "लागत र अवधि", "icon": "coins", "fields": s3}],
@@ -414,6 +445,10 @@ def _proposal_form(request, b):
 def bank_add(request):
     if (r := _guard(request, "bank.propose", "bank.manage")):
         return r
+    secs = _user_sectors(request.user)
+    if secs is not None:                                        # विषयगत शाखा
+        return _proposal_form(request, BankProject(duration_years=1, nature="new", source="section",
+                                                   sector_id=secs[0] if len(secs) == 1 else None))
     return _proposal_form(request, BankProject(duration_years=1, nature="new", source="ward"))
 
 
@@ -510,12 +545,17 @@ def technical(request, bid):
         f = Form(request)
         cost = f.amount("tech_cost", "इन्जिनियरको लागत अनुमान")
         errors = f.errors
-        files = _uploads(request, {"doc_dpr": "dpr", "doc_land": "land"}, errors)
-        if request.POST.get("dpr") and not files and not b.docs.filter(kind="dpr").exists():
-            errors.append("DPR / लागत अनुमान ✓ गर्दा फाइल पनि राख्नुहोस्।")
+        files = _uploads(request, {"doc_dpr": "dpr", "doc_iee": "iee", "doc_land": "land"}, errors)
         if not errors:
+            na = []
             for k, _l in bk.CHECKS:
-                setattr(b, k, bool(request.POST.get(k)))
+                val = request.POST.get(k) or ""
+                if k in bk.NA_OK and val == "na":       # DPR / IEE / जग्गा यो आयोजनामा आवश्यक नपर्ने
+                    na.append(k)
+                    setattr(b, k, False)
+                else:
+                    setattr(b, k, val in ("1", "yes"))
+            b.not_required = ",".join(na)
             name, post = approver_identity(request.user, "municipal")
             if b.tech_cost != cost and b.scored_at:
                 b.scored_at = None
@@ -528,17 +568,27 @@ def technical(request, bid):
             messages.success(request, f"{b.code} को प्राविधिक जाँच सुरक्षित भयो।")
             return redirect(_next(request, b))
     p = request.POST if request.method == "POST" else {}
-    fields = [F(k, lbl, (k in p) if p else getattr(b, k), kind="checkbox", required=False, hint=lbl) for k, lbl in bk.CHECKS]
+    na = bk.not_required(b)
+    TRI = [("yes", "छ"), ("no", "छैन / बाँकी"), ("na", "आवश्यक छैन")]
+    fields = []
+    for k, lbl in bk.CHECKS:
+        if k in bk.NA_OK:
+            cur = p.get(k, "no") if p else ("na" if k in na else ("yes" if getattr(b, k) else "no"))
+            fields.append(F(k, lbl, cur, kind="tri", options=TRI, required=False))
+        else:
+            fields.append(F(k, lbl, (k in p) if p else getattr(b, k), kind="checkbox", required=False, hint=lbl))
     fields += [
         F("tech_cost", "इन्जिनियरको लागत अनुमान (रु.)", p.get("tech_cost", plain(b.tech_cost) if b.tech_cost else plain(b.proposed_cost)),
           hint=f"प्रस्तावित: रु. {bk.money(b.proposed_cost)}"),
-        F("doc_dpr", "DPR / लागत अनुमान (फाइल)", kind="file", required=False),
-        F("doc_land", "जग्गा प्रमाण", kind="file", required=False),
+        F("doc_dpr", "DPR / लागत अनुमान (फाइल)", kind="file", required=False, hint="ऐच्छिक"),
+        F("doc_iee", "IEE / वातावरणीय अध्ययन (फाइल)", kind="file", required=False, hint="ऐच्छिक"),
+        F("doc_land", "जग्गा प्रमाण (फाइल)", kind="file", required=False, hint="ऐच्छिक"),
         F("tech_note", "प्राविधिक टिप्पणी", p.get("tech_note", b.tech_note), kind="textarea", wide=True, required=False),
     ]
     return _render_form(request, b, {"title": "प्राविधिक जाँच", "icon": "helmet-safety", "errors": errors, "upload": True,
                                      "submit": "जाँच सुरक्षित गर्नुहोस्",
-                                     "sections": [{"title": "तयारी जाँचसूची र लागत", "icon": "list-check", "fields": fields}]})
+                                     "sections": [{"title": "तयारी जाँचसूची र लागत", "icon": "list-check", "fields": fields}],
+                                     "note": "सबै आयोजनामा DPR, IEE वा जग्गा प्रमाण चाहिँदैन — नचाहिनेमा “आवश्यक छैन” छान्नुहोस्; त्यो जाँच अङ्कमा गनिँदैन। फाइल राख्नु ऐच्छिक हो।"})
 
 
 # ---------------------------------------------------------------- ४. अङ्क र कोड
@@ -757,6 +807,10 @@ def bank_import(request):
             except Exception:
                 rows, errors = [], ["फाइल पढ्न सकिएन।"]
             wards = _user_wards(request.user)
+            my_sectors = _user_sectors(request.user)
+            plan = mt.current_plan()
+            manage = "bank.manage" in user_perms(request.user)
+            step = min(mt.cycle_step(plan), 7) if plan else 2
             ward_by = {bk.np(w.name).translate(str.maketrans("०१२३४५६७८९", "0123456789")).strip(): w for w in Ward.objects.all()}
             sectors = {s.name.strip(): s for s in Sector.objects.all()}
             natures = {v: k for k, v in BankProject.NATURE}
@@ -776,12 +830,27 @@ def bank_import(request):
                 bad = []
                 if not name:
                     bad.append("नाम खाली")
-                if ward is None:
+                # वडा खाली भए पालिका / शाखा स्तरीय आयोजना; विषयगत शाखाको आयात सधैँ शाखा स्तरीय
+                src = "section" if (my_sectors is not None or not cell(1)) else "ward"
+                if cell(1) and ward is None:
                     bad.append(f"वडा '{cell(1)}' भेटिएन")
-                elif wards is not None and ward.id not in wards:
+                elif src == "ward" and wards is not None and ward.id not in wards:
                     bad.append("आफ्नो वडा होइन")
+                elif src == "section" and wards is not None:
+                    bad.append("वडा नम्बर लेख्नुहोस्")
                 if sector is None:
                     bad.append(f"क्षेत्र '{cell(3)}' भेटिएन")
+                elif my_sectors is not None and sector.id not in my_sectors:
+                    bad.append("आफ्नो शाखाको क्षेत्र होइन")
+                late = False
+                if src == "ward" and ward is not None and mt.ward_locked(plan, ward.id):
+                    late = True
+                    if not manage:
+                        bad.append(f"वडा {ward.name} को सूची पेश भइसकेको")
+                if src == "section" and sector is not None and mt.sector_locked(plan, sector.id):
+                    late = True
+                    if not manage:
+                        bad.append(f"{sector.name} शाखाको सूची पेश भइसकेको")
                 if nature is None:
                     bad.append(f"प्रकृति '{cell(4)}' मिलेन")
                 if cost in (None, "bad") or cost <= 0:
@@ -795,7 +864,9 @@ def bank_import(request):
                 if bad:
                     errors.append(f"पङ्क्ति {i}: " + ", ".join(bad))
                     continue
-                parsed.append(dict(name=name[:250], ward=ward, location=cell(2)[:250], sector=sector, nature=nature, proposed_cost=cost,
+                normal_until = 3 if src == "ward" else 4
+                entry = max(step, 3) if (step > normal_until or late) else None
+                parsed.append(dict(source=src, entry_step=entry, name=name[:250], ward=ward, location=cell(2)[:250], sector=sector, nature=nature, proposed_cost=cost,
                                    duration_years=int(yrs), households=nums[0], population=nums[1], women=nums[2],
                                    marginalized=nums[3], requested_by=cell(11)[:200], description=cell(12)))
             if not parsed and not errors:
@@ -804,7 +875,7 @@ def bank_import(request):
                 fy = FiscalYear.objects.order_by("-name").first()
                 with transaction.atomic():
                     for d in parsed:
-                        b = BankProject(fiscalyear=fy, source="ward", created_by=request.user, **d)
+                        b = BankProject(fiscalyear=fy, created_by=request.user, **d)
                         b.code = bk.new_code()
                         bk.apply_sector_defaults(b)
                         b.save()
@@ -998,4 +1069,51 @@ def plan_settings(request):
         "heads": ResourceHead.objects.all(), "sectors": sectors, "AUTO": ScoreCriterion.AUTO, "programs": PlanProgram.objects.select_related("pillar"),
         "GENDER": BankProject.GENDER, "CLIMATE": BankProject.CLIMATE, "sdgs": bk.sdg_options(),
         "crit_total": sum(c.weight for c in ScoreCriterion.objects.filter(is_active=True)), "pv": convert_preview(),
+    })
+
+
+# ---------------------------------------------------------------- विषयगत शाखाको प्रस्ताव र पेश
+@login_required
+def section_priority(request):
+    """विषयगत शाखा: आफ्नो क्षेत्रको सीमा, प्रस्तावको जम्मा लागत र सूची पेश गर्ने (पेशपछि लक)."""
+    P = user_perms(request.user)
+    if not P & {"bank.view", "bank.propose", "bank.manage"}:
+        return redirect("unauthorized")
+    mine = _user_sectors(request.user)
+    allowed = Sector.objects.filter(is_active=True)
+    if mine is not None:
+        allowed = allowed.filter(id__in=mine)
+    sector = allowed.filter(id=request.GET.get("sector") or request.POST.get("sector") or 0).first() or allowed.first()
+    if sector is None:
+        messages.error(request, "तपाईंलाई कुनै क्षेत्र / शाखा तोकिएको छैन — Admin लाई सम्पर्क गर्नुहोस्।")
+        return redirect("bank_list")
+    plan = mt.current_plan()
+    sc = mt.sector_ceilings(plan).get(sector.id) if plan else None
+    can_submit = bool(plan and plan.status == "draft" and sc and not sc.submitted_at
+                      and P & ({"bank.propose"} if mine is not None else {"bank.manage"}))
+    items = list(bk.queryset().filter(sector=sector, hold="", converted=False, projects__isnull=True)
+                 .exclude(source="ward").order_by("-id"))
+    used = mt.sector_used(sector.id)
+    if request.method == "POST":
+        if not can_submit:
+            return redirect("unauthorized")
+        if not items:
+            messages.error(request, "पेश गर्न प्रस्ताव छैन — पहिले आयोजना प्रस्ताव गर्नुहोस्।")
+        elif sc.amount and used > sc.amount:
+            messages.error(request, f"प्रस्तावको जम्मा रु. {bk.money(used)} सीमा रु. {bk.money(sc.amount)} भन्दा बढी भयो — केही प्रस्ताव घटाउनुहोस् वा लागत मिलाउनुहोस्।")
+        else:
+            name, post = approver_identity(request.user, "municipal")
+            sc.submitted_at, sc.submitted_by = timezone.now(), f"{name} ({post})"[:200]
+            sc.save(update_fields=["submitted_at", "submitted_by"])
+            for b in items:
+                _log(request, b, "update", f"{sector.name} शाखाले सूची पेश गर्यो")
+            messages.success(request, f"{sector.name} शाखाका {bk.np(len(items))} प्रस्ताव पेश भए — अब विषयगत समितिमा प्राविधिक जाँच र अङ्कका लागि जान्छ।")
+        return redirect(f"{reverse('section_priority')}?sector={sector.id}")
+    amount = bk.D(sc.amount) if sc else bk.ZERO
+    return render(request, "projects/bank_section.html", {
+        "sector": sector, "sectors": allowed, "plan": plan, "sc": sc, "items": items, "used": used,
+        "over": bool(amount) and used > amount, "left": amount - used,
+        "pct": min(int(used * 100 / amount), 100) if amount else None,
+        "can_submit": can_submit, "can_add": bool(P & {"bank.propose", "bank.manage"}) and not (sc and sc.submitted_at and "bank.manage" not in P),
+        "is_section": mine is not None,
     })

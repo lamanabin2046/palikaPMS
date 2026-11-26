@@ -126,15 +126,17 @@ def add_bank(plan, b, spent=ZERO):
 def totals(plan):
     lines = list(plan.lines.all())
     ceil = list(plan.ceilings.select_related("head"))
+    liabs = list(plan.liabilities.all())
     t = {}
     for i, k in enumerate(("y1", "y2", "y3")):
         resources = sum((D(getattr(c, k)) for c in ceil), ZERO)
         recurrent = D(getattr(plan, f"recurrent_{k}"))
-        cap = max(resources - recurrent, ZERO) if resources else ZERO   # पुँजीगत बजेट सीमा = स्रोत − चालु खर्च
+        liab = sum((D(getattr(x, k)) for x in liabs), ZERO)          # समपूरक, भुक्तानी बाँकी, क्रमागत (बैंक बाहिर), अन्य
+        cap = max(resources - recurrent - liab, ZERO) if resources else ZERO   # आयोजनाका लागि पुँजीगत सीमा = स्रोत − चालु − दायित्व
         com = sum((D(getattr(ln, k)) for ln in lines if ln.kind == "commitment"), ZERO)
         new = sum((D(getattr(ln, k)) for ln in lines if ln.kind == "new"), ZERO)
         used = com + new
-        t[k] = {"cap": cap, "resources": resources, "recurrent": recurrent, "commitment": com, "new": new, "used": used, "left": cap - used,
+        t[k] = {"cap": cap, "resources": resources, "recurrent": recurrent, "liab": liab, "commitment": com, "new": new, "used": used, "left": cap - used,
                 "pct": int(used * 100 / cap) if cap else None, "name": plan.years[i]}
     return t
 
@@ -174,6 +176,9 @@ def checks(plan, ex=None):
     y1 = t["y1"]["used"]
     if y1 and p1 * 100 / y1 < 60:
         warnings.append(f"पहिलो वर्षमा P1 आयोजनाको हिस्सा {bk.np(int(p1 * 100 / y1))}% मात्र।")
+    for r in sector_rows(plan):             # विषयगत क्षेत्र सीमा नाघेको — चेतावनी
+        if r["over"]:
+            warnings.append(f"{r['sc'].sector.name}: पालिका स्तरीय छनौट रु. {bk.money(r['chosen'])}, क्षेत्र सीमा रु. {bk.money(r['sc'].amount)} भन्दा बढी।")
     from accounts.models import Ward
 
     wards_in = {ln.bank.ward_id for ln in lines if ln.bank.ward_id}
@@ -274,6 +279,17 @@ def current_plan():
     return qs.filter(status__in=("draft", "recommended", "executive")).first() or qs.first()
 
 
+def ensure_ceilings(plan):
+    """मस्यौदा MTEF मा सेटिङबाट थपिएका नयाँ सक्रिय स्रोत शीर्षकको पङ्क्ति थप्ने."""
+    from .models import MTEFCeiling, ResourceHead
+
+    if plan.status != "draft":
+        return
+    have = set(plan.ceilings.values_list("head_id", flat=True))
+    for h in ResourceHead.objects.filter(is_active=True).exclude(id__in=have):
+        MTEFCeiling.objects.create(plan=plan, head=h)
+
+
 def ward_ceilings(plan):
     """{ward_id: WardCeiling} — सबै वडाका लागि (नभएको बनाइन्छ, रकम ०)."""
     from accounts.models import Ward
@@ -295,6 +311,36 @@ def ward_used(ward_id):
     for b in BankProject.objects.filter(ward_id=ward_id, source="ward", hold="", converted=False, projects__isnull=True):
         total += D(b.tech_cost or b.proposed_cost)
     return total
+
+
+def sector_ceilings(plan):
+    """{sector_id: SectorCeiling} — सबै सक्रिय क्षेत्रका लागि (नभएको बनाइन्छ, रकम ०)."""
+    from .models import Sector, SectorCeiling
+
+    have = {c.sector_id: c for c in plan.sector_ceilings.select_related("sector")}
+    for sec in Sector.objects.filter(is_active=True):
+        if sec.id not in have:
+            have[sec.id] = SectorCeiling.objects.create(plan=plan, sector=sec)
+    return have
+
+
+def sector_rows(plan):
+    """हरेक क्षेत्रको सीमा, पालिका स्तरीय (वडाबाहेक) प्रस्तावको लागत र MTEF पहिलो वर्षमा छानिएको रकम."""
+    from .models import BankProject
+
+    cs = sector_ceilings(plan)
+    proposed, chosen = {}, {}
+    for b in BankProject.objects.filter(hold="", converted=False, projects__isnull=True).exclude(source="ward"):
+        proposed[b.sector_id] = proposed.get(b.sector_id, ZERO) + D(b.tech_cost or b.proposed_cost)
+    for ln in plan.lines.filter(kind="new").exclude(bank__source="ward").select_related("bank"):
+        chosen[ln.bank.sector_id] = chosen.get(ln.bank.sector_id, ZERO) + D(ln.y1)
+    rows = []
+    for sc in sorted(cs.values(), key=lambda c: (c.sector.sort, c.sector_id)):
+        amt, used = D(sc.amount), chosen.get(sc.sector_id, ZERO)
+        rows.append({"sc": sc, "proposed": proposed.get(sc.sector_id, ZERO), "chosen": used,
+                     "over": bool(amt) and used > amt, "pct": min(int(used * 100 / amt), 100) if amt else None,
+                     "left": amt - used})
+    return rows
 
 
 def ward_locked(plan, ward_id):
@@ -328,3 +374,54 @@ def cycle_step(plan):
     if sub < len(wcs):
         return 3
     return 5 if plan.lines.filter(kind="new").exists() else 4
+
+
+def liabilities(plan):
+    """{kind: PlanLiability} — सबै प्रकार (नभएको बनाइन्छ, रकम ०)."""
+    from .models import PlanLiability
+
+    have = {x.kind: x for x in plan.liabilities.all()}
+    for k, _l in PlanLiability.KINDS:
+        if k not in have:
+            have[k] = PlanLiability.objects.create(plan=plan, kind=k)
+    return have
+
+
+def payable_suggestion(plan):
+    """भुक्तानी बाँकीको सुझाव: बजेट वर्षअघिका सम्झौता भएका (चालु / सम्पन्न) योजनामा सम्झौता वा बजेटबाट भुक्तानी घटाउँदा बाँकी.
+    फर्काउँछ (रकम, योजना सङ्ख्या)."""
+    from usercommittee.reports import all_rows
+
+    from .models import Project
+
+    ids = list(Project.objects.filter(fiscalyear__name__lt=plan.start_fy.name).values_list("id", flat=True))
+    total, n = ZERO, 0
+    if not ids:
+        return total, n
+    for r in all_rows(ids):
+        if r["status"] not in ("running", "completed"):
+            continue
+        base = D(r.get("contract")) or D(r.get("allocated"))
+        base = min(base, D(r.get("allocated"))) if D(r.get("allocated")) else base
+        left = base - D(r.get("gross"))
+        if left > 0:
+            total += left
+            n += 1
+    return total.quantize(Decimal("1")), n
+
+
+def sector_used(sector_id):
+    """शाखा / पालिका स्तरीय (वडाबाहेक) सक्रिय प्रस्तावको लागत — शाखाको सीमासँग दाँज्न."""
+    from .models import BankProject
+
+    total = ZERO
+    for b in BankProject.objects.filter(sector_id=sector_id, hold="", converted=False, projects__isnull=True).exclude(source="ward"):
+        total += D(b.tech_cost or b.proposed_cost)
+    return total
+
+
+def sector_locked(plan, sector_id):
+    if plan is None or plan.status == "approved":
+        return False
+    sc = plan.sector_ceilings.filter(sector_id=sector_id).first()
+    return bool(sc and sc.submitted_at)

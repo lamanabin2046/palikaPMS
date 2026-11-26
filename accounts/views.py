@@ -227,14 +227,25 @@ def add_staff(request):
                 elif user_type == "10":  # ACCOUNT OFFICER (लेखा अधिकृत)
                     AccountOfficer.objects.create(admin=user, name=name, mobile=mobile)
 
+                elif user_type == "11":  # विषयगत शाखा
+                    from projects.models import SectionStaff
+
+                    sectors = request.POST.getlist("sectors")
+                    if not sectors:
+                        raise ValueError("विषयगत शाखाका लागि क्षेत्र / शाखा छान्नु आवश्यक छ।")
+                    st = SectionStaff.objects.create(admin=user, name=name, mobile=mobile)
+                    st.sectors.set(sectors)
+
                 messages.success(request, f"कर्मचारी “{name}” सफलतापूर्वक थपियो।")
                 return redirect("manage_staff")
 
         except Exception as e:
             messages.error(request, f"त्रुटि भयो: {e}")
 
+    from projects.models import Sector
+
     return render(request, "Admin/Accounts/add_staff.html", {
-        "wards": wards
+        "wards": wards, "sectors": Sector.objects.filter(is_active=True),
     })
 
 
@@ -252,6 +263,7 @@ ROLE_PROFILE_ATTR = {
     "7": "wardengineer",
     "8": "palikaengineer",
     "10": "accountofficer",
+    "11": "sectionstaff",
 }
 
 

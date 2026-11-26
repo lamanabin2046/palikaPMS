@@ -13,16 +13,18 @@ ROLE_LABELS = {
     "8": "पालिका इन्जिनियर",
     "9": "वडा अध्यक्ष",
     "10": "लेखा अधिकृत",
+    "11": "विषयगत शाखा",
 }
 ROLE_PROFILE = {
     "1": "admin", "2": "cao", "3": "planningofficer", "4": "engineer", "5": "wadastaff",
     "6": "wardsachib", "7": "wardengineer", "8": "palikaengineer", "9": "wardchairperson",
-    "10": "accountofficer",
+    "10": "accountofficer", "11": "sectionstaff",
 }
 ROLE_HOME = {
     "1": "dashboard", "2": "cao_home", "3": "planning_dash", "4": "engineer_dash",
     "5": "my_work", "6": "ward_dash", "7": "engineer_dash",
     "8": "engineer_dash", "9": "ward_dash", "10": "account_dash",
+    "11": "section_priority",
 }
 
 
