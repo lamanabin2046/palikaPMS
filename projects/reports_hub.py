@@ -8,6 +8,9 @@ from django.urls import NoReverseMatch, reverse
 REV = ("rev.view", "rev.manage", "rev.approve", "rev.survey", "rev.collect")
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def R(code, title, desc, url, icon, perms=None, roles=None, query="", xlsx=False, fy=True, star=False):
     return {"code": code, "title": title, "desc": desc, "url_name": url, "icon": icon, "perms": perms, "roles": roles,
             "query": query, "xlsx": xlsx, "fy": fy, "star": star}
@@ -145,7 +148,7 @@ def build(user, fy):
             sep = "&" if "?" in url else "?"
             items.append(dict(it, url=url, xlsx_url=(url + sep + "export=xlsx") if it["xlsx"] else "",
                               print_url=url + sep + "print=1",
-                              note=(f"आ.व. {closed.name}" if it["url_name"] == "yearend_report" and closed else "")))
+                              note=(f"आ.व. {npd(closed.name)}" if it["url_name"] == "yearend_report" and closed else "")))
         if items:
             out.append(dict(s, items=items, icon_tone=TONES[s["tone"]]))
     return out

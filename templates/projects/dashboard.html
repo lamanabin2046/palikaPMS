@@ -9,7 +9,7 @@
       <p class="text-sm text-slate-500 mt-0.5">आ.व. {{ fy.name|to_nepali_number }}{% if fy.closed_at %} <span class="badge bg-slate-200 text-slate-700 ml-1"><i class="fas fa-lock"></i> बन्द भइसकेको</span>{% endif %}{% if scoped %} · तपाईंको वडा{% endif %} · बजेट, खर्च, खरिद विधि, वडा र राजस्व एकै ठाउँमा</p>
     </div>
     <div class="flex flex-wrap gap-2 items-center">
-      <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}{% if x.closed_at %} (बन्द){% endif %}</option>{% endfor %}</select></form>
+      <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name|to_nepali_number }}{% if x.closed_at %} (बन्द){% endif %}</option>{% endfor %}</select></form>
       {% if 'report.uc' in me.perms %}<a href="{% url 'audit_pack' %}?fiscalyear={{ fy.id }}" class="btn-secondary"><i class="fas fa-file-shield"></i> लेखापरीक्षण प्याकेट</a>{% endif %}
       {% if can_close %}{% if fy.closed_at %}<a href="{% url 'yearend_report' fy.id %}" class="btn-secondary"><i class="fas fa-file-lines"></i> बन्द प्रतिवेदन</a>
       {% else %}<a href="{% url 'yearend' %}?fiscalyear={{ fy.id }}" class="btn-secondary"><i class="fas fa-lock"></i> आ.व. बन्द</a>{% endif %}{% endif %}

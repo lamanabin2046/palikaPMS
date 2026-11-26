@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% load outputs %}
 {% block title %}{{ title }}{% endblock %}
 
@@ -21,10 +22,10 @@
   <input type="hidden" name="flag" value="{{ f.flag }}">
   <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
     <div><label class="form-label">आर्थिक वर्ष</label>
-      <select name="fiscalyear" class="form-select">{% for y in fiscal_years %}<option value="{{ y.id }}" {% if fy.id == y.id %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+      <select name="fiscalyear" class="form-select">{% for y in fiscal_years %}<option value="{{ y.id }}" {% if fy.id == y.id %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">वडा</label>
       <select name="ward" class="form-select"><option value="">सबै वडा</option>
-        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></div>
+        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">स्रोत</label>
       <select name="budget_type" class="form-select"><option value="">सबै</option>
         {% for b in budget_types %}<option value="{{ b.id }}" {% if f.budget_type == b.id|stringformat:'s' %}selected{% endif %}>{{ b.name }}</option>{% endfor %}</select></div>
@@ -70,7 +71,7 @@
           <tr class="{% if r.flag == 'over' %}bg-rose-50/50{% endif %}">
             <td class="px-3 py-2 text-slate-400">{{ forloop.counter|npn }}</td>
             <td class="px-3 py-2"><span class="font-medium text-slate-800">{{ r.p.name }}</span>
-              <span class="block text-[11px] text-slate-400">वडा नं. {{ r.p.ward.name|default:'—' }} · {{ r.kind_label|default:'—' }}{% if r.status_label %} · {{ r.status_label }}{% endif %}</span></td>
+              <span class="block text-[11px] text-slate-400">वडा नं. {{ r.p.ward.name|default:'—'|to_nepali_number }} · {{ r.kind_label|default:'—' }}{% if r.status_label %} · {{ r.status_label }}{% endif %}</span></td>
             <td class="px-3 py-2 text-right whitespace-nowrap">{{ r.budget|money }}</td>
             <td class="px-3 py-2 text-right whitespace-nowrap {% if r.committed > r.budget %}text-rose-600 font-medium{% endif %}">{% if r.committed %}{{ r.committed|money }}{% else %}—{% endif %}</td>
             <td class="px-3 py-2 text-right whitespace-nowrap">{{ r.spent|money }}</td>

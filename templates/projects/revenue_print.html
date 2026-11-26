@@ -1,3 +1,4 @@
+{% load nepali_date %}
 <!DOCTYPE html>
 {% load letters outputs %}
 <html lang="ne">
@@ -38,7 +39,7 @@
   <div class="subject">विषयः– {{ s.name }} को राजस्व ठेक्का बन्दोबस्त गर्ने सम्बन्धमा ।</div>
   <p>श्रीमान्,</p>
   <p>यस {{ palika.full_name|default:palika.name }}{% if s.ward %} वडा नं. {{ s.ward.name|npn }}{% endif %} {% if s.location %}{{ s.location }} स्थित {% endif %}<b>“{{ s.name }}”</b>
-    ({{ s.get_category_display }}) को आ.व. {{ s.fiscalyear.name }} को {{ s.contract_months|npn }} महिनाको ठेक्का बन्दोबस्त गर्नुपर्ने भएकाले देहायबमोजिम राजस्व मूल्याङ्कन गरिएको छ:</p>
+    ({{ s.get_category_display }}) को आ.व. {{ s.fiscalyear.name|to_nepali_number }} को {{ s.contract_months|npn }} महिनाको ठेक्का बन्दोबस्त गर्नुपर्ने भएकाले देहायबमोजिम राजस्व मूल्याङ्कन गरिएको छ:</p>
   <table>
     <tr><th>विवरण</th><th>मान</th></tr>
     {% if s.survey_date %}<tr><td>प्राविधिक सर्वेक्षण</td><td>{{ s.survey_date|bs }} · {{ s.surveyor }}{% if s.survey_quantity %} · उपलब्ध परिमाण {{ s.survey_quantity|money }} {{ s.unit }}{% endif %}</td></tr>{% endif %}
@@ -58,7 +59,7 @@
 {% editable_letter "revenue.notice" "राजस्व ठेक्का: बोलपत्र आह्वान सूचना" %}
   <div class="meta"><span>सूचना नं.: {{ s.notice_ref|default:'' }}</span><span>प्रकाशित मिति: {{ s.notice_date|bs }}</span></div>
   <div class="title">राजस्व ठेक्का बन्दोबस्त सम्बन्धी बोलपत्र आह्वानको सूचना</div>
-  <p>यस {{ palika.full_name|default:palika.name }}को आ.व. {{ s.fiscalyear.name }} को देहायको राजस्व स्रोतको ठेक्का बन्दोबस्त गर्न इच्छुक, कानुनबमोजिम दर्ता भएका फर्म / व्यक्तिहरूबाट
+  <p>यस {{ palika.full_name|default:palika.name }}को आ.व. {{ s.fiscalyear.name|to_nepali_number }} को देहायको राजस्व स्रोतको ठेक्का बन्दोबस्त गर्न इच्छुक, कानुनबमोजिम दर्ता भएका फर्म / व्यक्तिहरूबाट
     यो सूचना प्रकाशित भएको मितिले {{ days|npn }} दिनभित्र अर्थात् मिति {{ s.bid_deadline|bs }} सम्म कार्यालय समयभित्र छाप लगाइएको बोलपत्र आह्वान गरिन्छ।</p>
   <table>
     <tr><th>राजस्व स्रोत</th><th>स्थान</th><th>अवधि</th><th>न्यूनतम कबोल (रु.)</th><th>बोलपत्र जमानत</th></tr>

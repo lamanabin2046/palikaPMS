@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% block title %}योजनाको विवरण{% endblock %}
 {% block content %}
 <div class="space-y-4">
@@ -24,9 +25,9 @@
           {% for i in projects %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ i.fiscalyear.name }}</td>
+            <td>{{ i.fiscalyear.name|to_nepali_number }}</td>
             <td><a href="{% url 'project_timeline' i.id %}" class="text-brand-600 font-semibold hover:underline">{{ i.name }}</a></td>
-            <td>{{ i.ward.name }}</td>
+            <td>{{ i.ward.name|to_nepali_number }}</td>
             <td>{{ i.project_type.type }}</td>
             <td>{{ i.address }}</td>
             <td class="text-right font-semibold text-emerald-600">रु. {{ i.budget }}</td>

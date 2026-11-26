@@ -87,7 +87,7 @@
              hx-target="#wf-results" hx-select="#wf-results" hx-swap="outerHTML" hx-push-url="true" hx-include="closest form">
     </div>
     <div class="flex flex-wrap gap-2 lg:ml-auto">
-      <select name="ward" class="form-select !w-auto"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select>
+      <select name="ward" class="form-select !w-auto"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select>
       <select name="sector" class="form-select !w-auto"><option value="">सबै क्षेत्र</option>{% for s in sectors %}<option value="{{ s.id }}" {% if f.sector == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
       <select name="status" class="form-select !w-auto"><option value="">सबै अवस्था</option>{% for k, v in status_filters %}<option value="{{ k }}" {% if f.status == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
       <select name="priority" class="form-select !w-auto"><option value="">P1 / P2</option><option value="P1" {% if f.priority == 'P1' %}selected{% endif %}>P1</option><option value="P2" {% if f.priority == 'P2' %}selected{% endif %}>P2</option></select>
@@ -125,7 +125,7 @@
               {% if b.converted %}<span class="rounded-full bg-slate-100 px-2 py-0.5">पुरानो</span>{% endif %}
             </div>
           </td>
-          <td class="px-3 py-3.5 whitespace-nowrap">{{ b.ward.name|default:"-" }}{% if b.ward_rank %}<div class="text-[11px] text-slate-400">क्रम {{ b.ward_rank|to_nepali_number }}</div>{% endif %}</td>
+          <td class="px-3 py-3.5 whitespace-nowrap">{{ b.ward.name|default:"-"|to_nepali_number }}{% if b.ward_rank %}<div class="text-[11px] text-slate-400">क्रम {{ b.ward_rank|to_nepali_number }}</div>{% endif %}</td>
           <td class="px-3 py-3.5 text-right whitespace-nowrap">{{ b.cost|money:0 }}{% if s.exec.spent %}<div class="text-[11px] text-emerald-700">खर्च {{ s.exec.spent|money:0 }}</div>{% endif %}</td>
           <td class="px-3 py-3.5 text-center">{% if b.score is not None %}<span class="font-semibold">{{ b.score|floatformat:0|to_nepali_number }}</span>{% else %}<span class="text-slate-300">—</span>{% endif %}</td>
           {% for st in row.cells %}

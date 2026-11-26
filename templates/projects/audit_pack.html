@@ -10,7 +10,7 @@
   <form method="get" class="card p-5 space-y-4">
     <div class="flex flex-wrap items-end gap-3">
       <div><label class="form-label">आर्थिक वर्ष</label>
-        <select name="fiscalyear" class="form-select !w-auto">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}{% if x.closed_at %} (बन्द){% endif %}</option>{% endfor %}</select></div>
+        <select name="fiscalyear" class="form-select !w-auto">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name|to_nepali_number }}{% if x.closed_at %} (बन्द){% endif %}</option>{% endfor %}</select></div>
       <button name="download" value="1" class="btn-primary" hx-boost="false"><i class="fas fa-file-excel"></i> Excel डाउनलोड</button>
     </div>
     {% if start %}<p class="text-xs text-slate-500">आ.व. अवधि {{ start|bs }} – {{ end|bs }}{% if scoped %} · तपाईंको वडाका योजना मात्र{% endif %}</p>{% endif %}

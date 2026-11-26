@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}पालिका इन्जिनियर ड्यासबोर्ड{% endblock %}
 
 {% block extra_head %}
@@ -159,7 +160,7 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3"><a href="{% url 'palika_engineer_project_detail' p.id %}" class="text-brand-600 font-medium hover:underline">{{ p.name }}</a></td>
-          <td class="px-5 py-3 text-slate-700">{{ p.ward.name|default:"—" }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ p.ward.name|default:"—"|to_nepali_number }}</td>
           <td class="px-5 py-3">
             {% if p.cost_estimate %}
             <span class="badge bg-emerald-50 text-emerald-700">लागत अनुमान भयो</span>

@@ -15,10 +15,10 @@
         {% for k, l in kinds %}<option value="{{ k }}" {% if f.kind == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
     <div><label class="form-label">आर्थिक वर्ष</label>
       <select name="fiscalyear" class="form-select"><option value="all">सबै</option>
-        {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+        {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">वडा</label>
       <select name="ward" class="form-select"><option value="">सबै वडा</option>
-        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></div>
+        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div class="col-span-2"><label class="form-label">समिति / निर्माण व्यवसायी / फर्म वा योजना</label>
       <input type="search" name="q" value="{{ f.q }}" class="form-input" placeholder="नाम खोज्नुहोस्..."></div>
   </div>
@@ -84,7 +84,7 @@
           <td class="px-2 py-2 text-slate-400">{{ forloop.counter|npn }}</td>
           <td class="px-2 py-2 whitespace-nowrap">{{ ln.date_bs|default:"—" }}</td>
           <td class="px-2 py-2">{{ ln.p.name }}</td>
-          <td class="px-2 py-2">{{ ln.p.ward.name|default:'—' }}</td>
+          <td class="px-2 py-2">{{ ln.p.ward.name|default:'—'|to_nepali_number }}</td>
           <td class="px-2 py-2">{{ ln.party|default:'—' }}<span class="block text-[10px] text-slate-400">{{ ln.kind_label }}</span></td>
           <td class="px-2 py-2 whitespace-nowrap text-slate-500">{{ ln.source }}</td>
           <td class="px-2 py-2">{{ ln.label }}</td>

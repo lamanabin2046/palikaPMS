@@ -23,6 +23,9 @@ TOL = Decimal("1")
 ZERO = Decimal("0")
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def D(v):
     return Decimal(str(v or 0))
 
@@ -79,7 +82,7 @@ def closed_fy_error(project=None, fiscalyear_id=None):
     if fy is None and fiscalyear_id:
         fy = FiscalYear.objects.filter(id=fiscalyear_id).first()
     if fy is not None and fy.closed_at:
-        return f"आ.व. {fy.name} बन्द भइसकेको छ — यस आ.व. का योजनामा भुक्तानी वा बजेट परिवर्तन गर्न मिल्दैन।"
+        return f"आ.व. {npd(fy.name)} बन्द भइसकेको छ — यस आ.व. का योजनामा भुक्तानी वा बजेट परिवर्तन गर्न मिल्दैन।"
     return None
 
 

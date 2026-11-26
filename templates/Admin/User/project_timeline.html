@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% load static %}
 {% block title %}{{ project.name }} — Timeline{% endblock %}
 {% block content %}
@@ -14,7 +15,7 @@
   <div>
     <h1 class="text-lg md:text-xl font-bold text-slate-800">{{ project.name }}</h1>
     <p class="text-sm text-slate-500 mt-0.5">
-      वडा नं. {{ project.ward.name }} · {{ project.address }} · आ.व. {{ project.fiscalyear.name }}
+      वडा नं. {{ project.ward.name|to_nepali_number }} · {{ project.address }} · आ.व. {{ project.fiscalyear.name|to_nepali_number }}
     </p>
     <div class="mt-1">{% include 'includes/_bank_badge.html' %}</div>
   </div>
@@ -251,7 +252,7 @@
       <input type="file" name="image" required class="form-input">
       <textarea name="description" rows="3" required placeholder="Work description..." class="form-textarea"></textarea>
       <button class="btn-success">
-        <i class="fas fa-cloud-arrow-up"></i> Upload Timeline
+        <i class="fas fa-cloud-arrow-up"></i> प्रगति फोटो अपलोड
       </button>
     </form>
   </div>

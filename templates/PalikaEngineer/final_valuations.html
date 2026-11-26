@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}अन्तिम मूल्याङ्कन{% endblock %}
 {% block content %}
 
@@ -30,7 +31,7 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3 text-slate-700">{{ f.project.name }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ f.project.ward.name|default:"—" }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ f.project.ward.name|default:"—"|to_nepali_number }}</td>
           <td class="px-5 py-3 text-right text-slate-700">
             {% if f.project.cost_estimate %}रु {{ f.project.cost_estimate.total_cost|floatformat:2 }}{% else %}—{% endif %}
           </td>

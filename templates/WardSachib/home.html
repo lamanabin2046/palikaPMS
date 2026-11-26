@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}वडा सचिव ड्यासबोर्ड{% endblock %}
 
 {% block extra_head %}
@@ -17,7 +18,7 @@
 <!-- ================= PAGE HEADER ================= -->
 <div class="mb-6">
   <h1 class="text-xl md:text-2xl font-bold text-slate-800">वडा सचिव ड्यासबोर्ड</h1>
-  <p class="text-sm text-slate-500 mt-0.5">वडा नं. {{ sachib.ward.name }} – {{ sachib.name }}</p>
+  <p class="text-sm text-slate-500 mt-0.5">वडा नं. {{ sachib.ward.name|to_nepali_number }} – {{ sachib.name }}</p>
 </div>
 
 {% include 'includes/_my_work_lazy.html' %}
@@ -35,7 +36,7 @@
     <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-lg shrink-0"><i class="fas fa-clipboard-list"></i></div>
     <div>
       <p class="text-2xl font-bold text-slate-800 leading-tight">{{ total_count }}</p>
-      <p class="text-xs text-slate-500">लागत अनुमान भएका योजना (वडा {{ sachib.ward.name }})</p>
+      <p class="text-xs text-slate-500">लागत अनुमान भएका योजना (वडा {{ sachib.ward.name|to_nepali_number }})</p>
     </div>
   </div>
   <div class="bg-white rounded-2xl border border-slate-200 shadow-card p-5 flex items-center gap-4">
@@ -68,7 +69,7 @@
   <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-card">
     <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
       <i class="fas fa-chart-bar text-brand-500"></i>
-      <h2 class="text-sm font-semibold text-slate-700">योजना प्रगति चरण अनुसार (वडा {{ sachib.ward.name }})</h2>
+      <h2 class="text-sm font-semibold text-slate-700">योजना प्रगति चरण अनुसार (वडा {{ sachib.ward.name|to_nepali_number }})</h2>
     </div>
     <div class="chart-card-body">
       <div class="chart-box" style="height: 220px;">
@@ -109,7 +110,7 @@
 <div class="bg-white rounded-2xl border border-slate-200 shadow-card mt-4">
   <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
     <i class="fas fa-sack-dollar text-emerald-500"></i>
-    <h2 class="text-sm font-semibold text-slate-700">कुल भुक्तानी तथा बजेट उपयोग (वडा {{ sachib.ward.name }})</h2>
+    <h2 class="text-sm font-semibold text-slate-700">कुल भुक्तानी तथा बजेट उपयोग (वडा {{ sachib.ward.name|to_nepali_number }})</h2>
   </div>
   <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
     <div>

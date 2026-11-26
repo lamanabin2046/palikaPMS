@@ -1,3 +1,4 @@
+{% load nepali_date %}
 <!DOCTYPE html>
 {% load letters outputs %}
 <html lang="ne">
@@ -37,7 +38,7 @@
   <div class="meta"><span>टिप्पणी र आदेश</span><span>मिति: {{ m.notice_date|bs }}</span></div>
   <div class="subject">विषयः– संस्था / समितिमार्फत काम गराउन प्रस्ताव आह्वान गर्ने सम्बन्धमा ।</div>
   <p>श्रीमान्,</p>
-  <p>यस कार्यालयको आ.व. {{ project.fiscalyear.name }} को स्वीकृत वार्षिक कार्यक्रम तथा वार्षिक खरिद योजनामा समावेश भएको
+  <p>यस कार्यालयको आ.व. {{ project.fiscalyear.name|to_nepali_number }} को स्वीकृत वार्षिक कार्यक्रम तथा वार्षिक खरिद योजनामा समावेश भएको
     वडा नं. {{ project.ward.name|npn }} को <b>“{{ project.name }}”</b> का लागि विनियोजित रु. {{ project.budget|money }} मध्ये
     मिति {{ m.estimate_date|bs }} मा रु. {{ m.estimate_amount|money }} को लागत अनुमान स्वीकृत भएको छ।</p>
   {% if m.scope %}<p><b>कार्यक्षेत्र / कार्यविवरण:</b> {{ m.scope|linebreaksbr }}</p>{% endif %}
@@ -58,7 +59,7 @@
 {% editable_letter "sanstha.public_notice" "संस्था / समिति: सार्वजनिक सूचना" %}
   <div class="meta"><span>सूचना नं.: {{ m.notice_ref|default:'' }}</span><span>प्रकाशित मिति: {{ m.notice_date|bs }}</span></div>
   <div class="title">प्रस्ताव पेश गर्ने सम्बन्धी सार्वजनिक सूचना</div>
-  <p>यस {{ palika.name|default:'कार्यालय' }} को आ.व. {{ project.fiscalyear.name }} को स्वीकृत कार्यक्रम अन्तर्गत वडा नं. {{ project.ward.name|npn }} को
+  <p>यस {{ palika.name|default:'कार्यालय' }} को आ.व. {{ project.fiscalyear.name|to_nepali_number }} को स्वीकृत कार्यक्रम अन्तर्गत वडा नं. {{ project.ward.name|npn }} को
     <b>“{{ project.name }}”</b> सञ्चालन गर्न इच्छुक, कानुनबमोजिम दर्ता भई नवीकरण भएका संस्था / समितिहरूबाट यो सूचना प्रकाशित भएको मितिले
     {{ days|npn }} दिनभित्र अर्थात् मिति {{ m.submission_deadline|bs }} सम्म कार्यालय समयभित्र प्रस्ताव पेश गर्न यो सूचना प्रकाशित गरिएको छ।</p>
   {% if m.scope %}<p><b>कार्यक्षेत्र / कार्यविवरण:</b> {{ m.scope|linebreaksbr }}</p>{% endif %}
@@ -82,7 +83,7 @@
   <div class="meta"><span>पत्र संख्या: {{ m.notice_ref|default:'' }}</span><span>मिति: {{ m.notice_date|bs }}</span></div>
   <p>श्री {{ o.firm_name }}<br>{{ o.firm_address }}</p>
   <div class="subject">विषयः– प्रस्ताव पेश गर्ने सम्बन्धमा ।</div>
-  <p>यस कार्यालयको आ.व. {{ project.fiscalyear.name }} को स्वीकृत कार्यक्रम अन्तर्गत वडा नं. {{ project.ward.name|npn }} को “{{ project.name }}”
+  <p>यस कार्यालयको आ.व. {{ project.fiscalyear.name|to_nepali_number }} को स्वीकृत कार्यक्रम अन्तर्गत वडा नं. {{ project.ward.name|npn }} को “{{ project.name }}”
     संस्था / समितिमार्फत सञ्चालन गर्ने निर्णय भएकाले उक्त काम गर्न इच्छुक भए कार्यक्षेत्र र लागत विवरणसहितको प्रस्ताव तथा संस्था दर्ता, नवीकरण,
     PAN र कर चुक्ताका कागजात संलग्न राखी मिति {{ m.submission_deadline|bs }} सम्म यस कार्यालयमा पेश गर्नुहुन अनुरोध छ।</p>
   {% if m.scope %}<p><b>कार्यक्षेत्र:</b> {{ m.scope|linebreaksbr }}</p>{% endif %}

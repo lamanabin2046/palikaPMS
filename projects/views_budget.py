@@ -17,6 +17,9 @@ from .budget import TOL, ZERO, D, check_project_budget, distributed, head_room, 
 from .models import Budget_Type, BudgetAmendment, BudgetHead, FiscalYear, Project
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _user_wards(user):
     from usercommittee.views_workflow import _user_wards as uw
 
@@ -266,7 +269,7 @@ def budget_status(request):
     title = "बजेट स्थिति (बजेट नियन्त्रण)"
     if request.GET.get("export") == "xlsx":
         return _xlsx(fy, groups, total)
-    desc = [f"आ.व. {fy.name}" if fy else ""]
+    desc = [f"आ.व. {npd(fy.name)}" if fy else ""]
     if f["ward"].isdigit():
         w = Ward.objects.filter(id=f["ward"]).first()
         desc.append(f"वडा नं. {w.name}" if w else "")

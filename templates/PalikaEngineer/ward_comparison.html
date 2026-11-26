@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}वडा अनुसार तुलना{% endblock %}
 
 {% block extra_head %}
@@ -72,7 +73,7 @@
       <tbody class="divide-y divide-slate-100">
         {% for row in ward_rows %}
         <tr class="hover:bg-slate-50">
-          <td class="px-5 py-3 font-medium text-slate-700">{{ row.ward.name }}</td>
+          <td class="px-5 py-3 font-medium text-slate-700">{{ row.ward.name|to_nepali_number }}</td>
           <td class="px-5 py-3 text-slate-700">{{ row.total }}</td>
           <td class="px-5 py-3 text-slate-700">{{ row.committee_pending }}</td>
           <td class="px-5 py-3 text-slate-700">{{ row.estimate_pending }}</td>

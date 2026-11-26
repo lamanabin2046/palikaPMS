@@ -24,7 +24,7 @@
     {% elif lock_reason == 'status' and next_fy %}
     <form method="post" action="{% url 'mtef_list' %}" hx-boost="false" class="flex items-center gap-2">{% csrf_token %}
       <input type="hidden" name="new_fy" value="{{ next_fy }}"><input type="hidden" name="next" value="revenue">
-      <button class="btn-chip-brand"><i class="fas fa-plus"></i> आ.व. {{ next_fy }} देखि नयाँ MTEF सुरु गर्नुहोस्</button>
+      <button class="btn-chip-brand"><i class="fas fa-plus"></i> आ.व. {{ next_fy|to_nepali_number }} देखि नयाँ MTEF सुरु गर्नुहोस्</button>
     </form>{% endif %}
   </div>
   {% endif %}
@@ -174,8 +174,8 @@
         <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">वडा</th><th class="px-2 py-2 text-right font-medium">आ.व. {{ plan.years.0|to_nepali_number }} को सीमा (रु.)</th><th class="px-2 py-2 text-right font-medium">प्रस्ताव लागत</th><th class="px-4 py-2 text-left font-medium">अवस्था</th></tr></thead>
         <tbody class="divide-y divide-slate-100">
         {% for r in ward_rows %}
-          <tr><th scope="row" class="px-4 py-2 text-left font-medium text-slate-700">वडा {{ r.wc.ward.name }}</th>
-            <td class="px-1 py-1 text-right">{% if can and not r.wc.submitted_at %}<input data-money inputmode="numeric" name="w{{ r.wc.id }}" value="{{ r.wc.amount|floatformat:0 }}" aria-label="वडा {{ r.wc.ward.name }} सीमा" class="form-input text-right !py-1 ml-auto" style="width:11rem">{% else %}<span data-wardval="{{ r.wc.amount|floatformat:0 }}">{{ r.wc.amount|money:0 }}</span>{% endif %}</td>
+          <tr><th scope="row" class="px-4 py-2 text-left font-medium text-slate-700">वडा {{ r.wc.ward.name|to_nepali_number }}</th>
+            <td class="px-1 py-1 text-right">{% if can and not r.wc.submitted_at %}<input data-money inputmode="numeric" name="w{{ r.wc.id }}" value="{{ r.wc.amount|floatformat:0 }}" aria-label="वडा {{ r.wc.ward.name|to_nepali_number }} सीमा" class="form-input text-right !py-1 ml-auto" style="width:11rem">{% else %}<span data-wardval="{{ r.wc.amount|floatformat:0 }}">{{ r.wc.amount|money:0 }}</span>{% endif %}</td>
             <td class="px-2 py-2 text-right {% if r.over %}text-rose-700 font-semibold{% else %}text-slate-700{% endif %}" data-used="{{ r.used|floatformat:0 }}">{{ r.used|money:0 }}</td>
             <td class="px-4 py-2" {% if not r.wc.submitted_at %}data-wstatus{% endif %}>{% if r.wc.submitted_at %}<span class="text-xs rounded-full px-2 py-0.5 bg-emerald-50 text-emerald-700">पेश भयो · {{ r.wc.submitted_at|date:"Y-m-d" }}</span>
               {% if can %}<button type="button" class="ml-1 text-xs text-slate-500 underline" onclick="this.nextElementSibling.classList.toggle('hidden')">फेरि खोल्ने</button>

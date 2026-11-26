@@ -11,6 +11,9 @@ import re
 
 # Create your views here.
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def devanagari_to_english_number(dev_num_str):
     devanagari_digits = '०१२३४५६७८९'
     english_digits = '0123456789'
@@ -367,7 +370,7 @@ def import_excel(request):
                 from .fiscal import current_fy_id
 
                 if fy.id != current_fy_id():
-                    raise ValueError(f"आ.व. {fy.name} चालु आ.व. होइन — नयाँ योजना चालु आ.व. मा मात्र")
+                    raise ValueError(f"आ.व. {npd(fy.name)} चालु आ.व. होइन — नयाँ योजना चालु आ.व. मा मात्र")
                 head = _import_head(row, fy)
                 amount = _to_number(row["budget"])
                 if head is not None:
@@ -751,12 +754,12 @@ def manage_fiscal_years(request):
             return redirect("unauthorized")
         fy = get_object_or_404(FiscalYear, id=request.POST.get("id"))
         if fy.closed_at:
-            messages.error(request, f"आ.व. {fy.name} बन्द भइसकेको छ — चालु बनाउन पहिले आ.व. बन्दबाट खोल्नुहोस्।")
+            messages.error(request, f"आ.व. {npd(fy.name)} बन्द भइसकेको छ — चालु बनाउन पहिले आ.व. बन्दबाट खोल्नुहोस्।")
         else:
             from .fiscal import set_current
 
             set_current(fy)
-            messages.success(request, f"आ.व. {fy.name} अब चालु आ.व. हो — कामकाज यही आ.व. का योजनामा हुनेछ।")
+            messages.success(request, f"आ.व. {npd(fy.name)} अब चालु आ.व. हो — कामकाज यही आ.व. का योजनामा हुनेछ।")
         return redirect("manage_fiscal_years")
     return _lookup_list_and_create(
         request, FiscalYear,

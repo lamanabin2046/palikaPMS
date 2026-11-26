@@ -8,7 +8,7 @@
       <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-lock text-brand-600"></i> आ.व. {{ fy.name|to_nepali_number }} बन्द</h1>
       <p class="text-sm text-slate-500 mt-0.5">हरेक योजनाको निर्णय: <b>बहुवर्षीय</b> योजना मात्र <b>क्रमागत</b> (इतिहाससहित अर्को आ.व. मा सर्ने); एक वर्षे अधुरा योजना <b>रोक्का</b> (बजेट फ्रिज, हेर्न मात्र); सम्पन्न त्यहीँ रहने। बन्दपछि नयाँ आ.व. चालु आ.व. हुन्छ।</p>
     </div>
-    <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}{% if not x.closed_at %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endif %}{% endfor %}</select></form>
+    <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}{% if not x.closed_at %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name|to_nepali_number }}</option>{% endif %}{% endfor %}</select></form>
   </div>
   <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
     <div class="card p-4"><p class="text-xs text-slate-500">योजना</p><p class="text-lg font-bold">{{ rows|length|npn }}</p><p class="text-[11px] text-slate-400">चालु {{ counts.carried|npn }} · सुरु नभएको {{ counts.frozen|npn }} · सम्पन्न {{ counts.completed|npn }}</p></div>
@@ -48,7 +48,7 @@
     <div class="card p-5 space-y-3">
       <div class="grid sm:grid-cols-3 gap-3">
         <div><label class="form-label">क्रमागत योजना सार्ने आ.व.</label>
-          <select name="to_fiscalyear" class="form-select"><option value="">— नयाँ बनाउने —</option>{% for x in later %}<option value="{{ x.id }}" {% if p.to_fiscalyear == x.id|stringformat:'s' or forloop.first and not p.to_fiscalyear %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endfor %}</select></div>
+          <select name="to_fiscalyear" class="form-select"><option value="">— नयाँ बनाउने —</option>{% for x in later %}<option value="{{ x.id }}" {% if p.to_fiscalyear == x.id|stringformat:'s' or forloop.first and not p.to_fiscalyear %}selected{% endif %}>आ.व. {{ x.name|to_nepali_number }}</option>{% endfor %}</select></div>
         <div><label class="form-label">वा नयाँ आ.व. को नाम</label><input name="new_fy" value="{{ p.new_fy|default:suggest_new }}" class="form-input" placeholder="२०८३/८४"></div>
         <div><label class="form-label">बन्द गर्ने निर्णय नं. / मिति <span class="text-rose-500">*</span></label><input name="close_ref" value="{{ p.close_ref }}" class="form-input"></div>
       </div>

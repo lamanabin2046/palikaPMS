@@ -1,4 +1,5 @@
 {% extends 'projects/revenue_public_base.html' %}
+{% load nepali_date %}
 {% load outputs %}
 {% block title %}योजनाहरू — नागरिक जानकारी{% endblock %}
 {% block home %}{% url 'citizen_list' %}{% endblock %}
@@ -7,7 +8,7 @@
 {% block footer %}योजना शाखा · यो पेजमा देखिएका रकम प्रणालीमा दर्ता भएअनुसार हुन्{% endblock %}
 {% block body %}
 <div class="card p-4">
-  <h1 class="text-xl font-bold">आ.व. {{ fy.name|default:"—" }} का योजनाहरू</h1>
+  <h1 class="text-xl font-bold">आ.व. {{ fy.name|default:"—"|to_nepali_number }} का योजनाहरू</h1>
   <p class="text-sm"><a href="{% url 'public_plan' %}" class="text-blue-700 underline"><i class="fas fa-list-check"></i> सभाबाट पारित वार्षिक कार्यक्रम र वडाको बजेट सीमा हेर्नुहोस् →</a></p>
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 text-center">
     <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">जम्मा योजना</p><p class="text-xl font-bold">{{ summary.n|npn }}</p></div>
@@ -17,8 +18,8 @@
   </div>
 </div>
 <form method="get" class="card p-3 flex flex-wrap gap-2">
-  <select name="fiscalyear" class="inp" style="width:auto">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy and x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endfor %}</select>
-  <select name="ward" class="inp" style="width:auto"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा {{ w.name }}</option>{% endfor %}</select>
+  <select name="fiscalyear" class="inp" style="width:auto">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy and x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name|to_nepali_number }}</option>{% endfor %}</select>
+  <select name="ward" class="inp" style="width:auto"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}</select>
   <select name="status" class="inp" style="width:auto"><option value="">सबै अवस्था</option>
     <option value="completed" {% if f.status == 'completed' %}selected{% endif %}>सम्पन्न</option>
     <option value="running" {% if f.status == 'running' %}selected{% endif %}>चालु</option>

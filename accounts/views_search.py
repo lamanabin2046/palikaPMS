@@ -6,6 +6,9 @@ from django.shortcuts import render
 from accounts.permissions import user_perms
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _project_url(p):
     """योजनाको खरिद विधिअनुसार कार्यप्रवाह पेज."""
     from django.urls import reverse
@@ -55,7 +58,7 @@ def global_search(request):
             rq = RevenueSource.objects.filter(Q(name__icontains=q) | Q(location__icontains=q)).select_related("fiscalyear")
             if wards is not None:
                 rq = rq.filter(ward_id__in=wards)
-            rows = [{"title": s.name, "sub": f"आ.व. {s.fiscalyear.name}", "url": reverse("revenue_list") + f"?open={s.id}"} for s in rq[:25]]
+            rows = [{"title": s.name, "sub": f"आ.व. {npd(s.fiscalyear.name)}", "url": reverse("revenue_list") + f"?open={s.id}"} for s in rq[:25]]
             if rows:
                 groups.append({"label": "राजस्व आम्दानी", "icon": "landmark", "rows": rows})
     return render(request, "accounts/search.html", {"q": q, "groups": groups, "total": sum(len(g["rows"]) for g in groups)})

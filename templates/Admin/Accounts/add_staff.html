@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}कर्मचारी दर्ता{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-4">
@@ -61,7 +62,7 @@
             <div>
               <select name="wards" multiple class="form-select select2 w-full">
                 {% for w in wards %}
-                <option value="{{ w.id }}">{{ w.name }}</option>
+                <option value="{{ w.id }}">{{ w.name|to_nepali_number }}</option>
                 {% endfor %}
               </select>
               <p class="form-hint">(Ctrl / Shift थिचेर धेरै वडा छान्न सक्नुहुन्छ)</p>
@@ -76,7 +77,7 @@
               <select name="sachib_ward" class="form-select select2 w-full">
                 <option value="">-- वडा छान्नुहोस् --</option>
                 {% for w in wards %}
-                <option value="{{ w.id }}">{{ w.name }}</option>
+                <option value="{{ w.id }}">{{ w.name|to_nepali_number }}</option>
                 {% endfor %}
               </select>
               <p class="form-hint">(वडा सचिव वा वडा अध्यक्ष एक पटकमा एउटै वडाको जिम्मेवारीमा हुन्छन्)</p>
@@ -103,7 +104,7 @@
               <select name="engineer_ward" class="form-select select2 w-full">
                 <option value="">-- वडा छान्नुहोस् --</option>
                 {% for w in wards %}
-                <option value="{{ w.id }}">{{ w.name }}</option>
+                <option value="{{ w.id }}">{{ w.name|to_nepali_number }}</option>
                 {% endfor %}
               </select>
               <p class="form-hint">(वडा इन्जिनियर एक पटकमा एउटै वडाको जिम्मेवारीमा हुन्छन्)</p>

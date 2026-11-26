@@ -5,7 +5,7 @@
     <div class="min-w-0">
       <p class="text-xs font-medium text-brand-700 flex items-center gap-1.5"><i class="fas fa-stamp"></i> राजस्व आम्दानी — {% if mode == 'approval' %}प्रशासनिक स्वीकृति{% else %}सफल बोलपत्रदाता स्वीकृति{% endif %}</p>
       <h2 class="text-lg font-bold text-slate-800 truncate mt-0.5">{{ s.name }}</h2>
-      <p class="text-xs text-slate-500 mt-0.5">{{ s.get_category_display }}{% if s.ward %} · वडा नं. {{ s.ward.name|to_nepali_number }}{% endif %} · आ.व. {{ s.fiscalyear.name }}</p>
+      <p class="text-xs text-slate-500 mt-0.5">{{ s.get_category_display }}{% if s.ward %} · वडा नं. {{ s.ward.name|to_nepali_number }}{% endif %} · आ.व. {{ s.fiscalyear.name|to_nepali_number }}</p>
     </div>
     <button type="button" onclick="closeAppModal()" class="w-9 h-9 shrink-0 rounded-lg text-slate-500 hover:bg-slate-100" title="बन्द (Esc)"><i class="fas fa-xmark text-lg"></i></button>
   </div>

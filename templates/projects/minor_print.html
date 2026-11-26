@@ -1,3 +1,4 @@
+{% load nepali_date %}
 <!DOCTYPE html>
 {% load letters outputs %}
 <html lang="ne">
@@ -31,7 +32,7 @@
   <div class="meta"><span>टिप्पणी र आदेश</span><span>मिति: {{ today|bs }}</span></div>
   <div class="subject">विषयः– {% if method == 'direct' %}सोझै खरिद गर्ने{% elif method == 'amanat' %}अमानतबाट काम गराउने{% else %}संस्था / समितिमार्फत काम गराउने{% endif %} सम्बन्धमा ।</div>
   <p>श्रीमान्,</p>
-  <p>यस कार्यालयको आ.व. {{ project.fiscalyear.name }} को स्वीकृत वार्षिक कार्यक्रम तथा वार्षिक खरिद योजनामा समावेश भएको
+  <p>यस कार्यालयको आ.व. {{ project.fiscalyear.name|to_nepali_number }} को स्वीकृत वार्षिक कार्यक्रम तथा वार्षिक खरिद योजनामा समावेश भएको
     वडा नं. {{ project.ward.name|npn }} को <b>“{{ project.name }}”</b> का लागि विनियोजित रु. {{ project.budget|money }} मध्ये
     मिति {{ m.estimate_date|bs }} मा रु. {{ m.estimate_amount|money }} को लागत अनुमान स्वीकृत भएको छ।</p>
   {% if method == 'amanat' %}

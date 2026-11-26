@@ -13,7 +13,7 @@
       <tbody id="mtef-add-rows" class="divide-y divide-slate-100">
       {% for b in banks %}<tr>
         <td class="py-2"><input type="checkbox" name="bid" value="{{ b.id }}"></td>
-        <td class="py-2">{{ b.name }}<div class="text-[11px] text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name }}{% if b.ward_rank %} (क्रम {{ b.ward_rank }}){% endif %}{% endif %} · {{ b.sector.name|default:"" }} · {{ b.priority }}{% if b.sdg %} · SDG {{ b.sdg }}{% endif %}</div></td>
+        <td class="py-2">{{ b.name }}<div class="text-[11px] text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name|to_nepali_number }}{% if b.ward_rank %} (क्रम {{ b.ward_rank }}){% endif %}{% endif %} · {{ b.sector.name|default:"" }} · {{ b.priority }}{% if b.sdg %} · SDG {{ b.sdg }}{% endif %}</div></td>
         <td class="py-2 text-right font-semibold">{{ b.score|floatformat:0|default:"—" }}</td>
         <td class="py-2 text-right">{{ b.cost|money:0 }}</td>
         <td class="py-2 text-right">{{ b.duration_years|to_nepali_number }}</td>

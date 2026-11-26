@@ -10,7 +10,7 @@
       <p class="text-sm text-slate-500">वडाबाट आएका प्रस्तावलाई १, २, ३… क्रम दिई स्वीकृत गर्नुहोस् — त्यसपछि प्राविधिक जाँचमा जान्छ।</p>
     </div>
     <div class="flex gap-2">
-      {% if wards|length > 1 %}<form method="get"><select name="ward" class="form-select !w-auto" onchange="this.form.submit()">{% for w in wards %}<option value="{{ w.id }}" {% if w.id == ward.id %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></form>{% endif %}
+      {% if wards|length > 1 %}<form method="get"><select name="ward" class="form-select !w-auto" onchange="this.form.submit()">{% for w in wards %}<option value="{{ w.id }}" {% if w.id == ward.id %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></form>{% endif %}
       <a href="{% url 'bank_list' %}?ward={{ ward.id }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> आयोजना बैंक</a>
     </div>
   </div>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% load outputs %}
 {% block title %}{{ firm.firm_name }}{% endblock %}
 
@@ -65,7 +66,7 @@
           <th class="px-3 py-2.5 text-right font-medium">ढिलाइ</th><th class="px-3 py-2.5 text-left font-medium">कैफियत</th></tr></thead>
         <tbody class="divide-y divide-slate-100">
           {% for r in rows %}
-          <tr><td class="px-3 py-2"><span class="font-medium">{{ r.p.name }}</span><span class="block text-[11px] text-slate-400">वडा नं. {{ r.p.ward.name|default:'—'|npn }} · {{ r.p.fiscalyear.name }}</span></td>
+          <tr><td class="px-3 py-2"><span class="font-medium">{{ r.p.name }}</span><span class="block text-[11px] text-slate-400">वडा नं. {{ r.p.ward.name|default:'—'|npn }} · {{ r.p.fiscalyear.name|to_nepali_number }}</span></td>
             <td class="px-3 py-2">{{ r.kind_label }}</td><td class="px-3 py-2 text-right whitespace-nowrap">{{ r.amount|money:0 }}</td>
             <td class="px-3 py-2">{% if r.status == 'completed' %}<span class="badge bg-emerald-50 text-emerald-700">सम्पन्न</span>{% elif r.status == 'running' %}<span class="badge bg-brand-50 text-brand-700">चालु</span>{% else %}<span class="badge bg-slate-100 text-slate-500">सम्झौता बाँकी</span>{% endif %}</td>
             <td class="px-3 py-2 text-right">{% if r.delay_days %}<span class="text-amber-700">{{ r.delay_days|npn }} दिन</span>{% if r.ld %}<span class="block text-[10px] text-slate-500">हर्जाना रु. {{ r.ld|money:0 }}</span>{% endif %}{% else %}—{% endif %}</td>

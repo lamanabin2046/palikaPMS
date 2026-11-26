@@ -97,7 +97,7 @@
       </select>
       <select name="ward" class="form-select !w-auto min-w-[9rem]">
         <option value="">सबै वडा</option>
-        {% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}
+        {% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}
       </select>
       <select name="category" class="form-select !w-auto min-w-[10rem]">
         <option value="">सबै प्रकार</option>
@@ -144,7 +144,7 @@
               {% if s.deadline_passed %}<span class="rounded-full bg-amber-50 text-amber-700 px-2 py-0.5"><i class="far fa-clock"></i> पेश गर्ने म्याद {{ s.submission_bs }} सकियो</span>{% endif %}
             </div>
           </td>
-          <td class="px-3 py-4 whitespace-nowrap">{{ p.ward.name|default:"-" }}</td>
+          <td class="px-3 py-4 whitespace-nowrap">{{ p.ward.name|default:"-"|to_nepali_number }}</td>
           <td class="px-3 py-4">{{ s.contractor|default:"—" }}{% if s.amount %}<div class="text-[11px] text-slate-400">रु. {{ s.amount|money:0 }}</div>{% endif %}</td>
           {% for st in row.cells %}
           <td class="px-2 py-4 text-center">

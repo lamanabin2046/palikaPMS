@@ -9,7 +9,7 @@
   {% for r in rows %}{% with b=r.b ln=r.ln %}
   <tr>
     <td class="px-4 py-2"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="font-medium text-slate-800 hover:text-brand-700">{{ b.name }}</a>
-      <div class="text-[11px] text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name }}{% endif %}{% if b.sector %} · {{ b.sector.name }}{% endif %}{% if ln.note %} · {{ ln.note }}{% endif %}{% if r.progress is not None %} · प्रगति {{ r.progress|to_nepali_number }}%{% endif %}</div></td>
+      <div class="text-[11px] text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name|to_nepali_number }}{% endif %}{% if b.sector %} · {{ b.sector.name }}{% endif %}{% if ln.note %} · {{ ln.note }}{% endif %}{% if r.progress is not None %} · प्रगति {{ r.progress|to_nepali_number }}%{% endif %}</div></td>
     <td class="px-3 py-2 text-[11px] whitespace-nowrap">{% if b.priority %}<span class="font-semibold">{{ b.priority }}</span>{% endif %}{% if b.sdg %} SDG{{ b.sdg }}{% endif %}{% if not b.coded %} <span class="text-amber-600" title="कोड अधुरो">⚠</span>{% endif %}<div class="text-slate-400">{% if b.score is not None %}अङ्क {{ b.score|floatformat:0 }}{% endif %}</div></td>
     <td class="px-3 py-2 text-right text-xs whitespace-nowrap">{{ b.cost|money:0 }}{% if r.spent %}<div class="text-emerald-700">खर्च {{ r.spent|money:0 }}</div>{% endif %}{% if r.contract %}<div class="text-slate-400">सम्झौता {{ r.contract|money:0 }}</div>{% endif %}</td>
     {% if can %}

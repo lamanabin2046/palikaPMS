@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}{{ project.name }} — विस्तृत विवरण{% endblock %}
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-4">
@@ -7,7 +8,7 @@
   <div class="flex items-center justify-between gap-3">
     <div>
       <h1 class="text-lg md:text-xl font-bold text-slate-800">{{ project.name }}</h1>
-      <p class="text-sm text-slate-500 mt-0.5">वडा नं. {{ project.ward.name|default:"—" }} — आ.व. {{ project.fiscalyear.name|default:"—" }} — बजेट रु. {{ project.budget|floatformat:0 }}</p>
+      <p class="text-sm text-slate-500 mt-0.5">वडा नं. {{ project.ward.name|default:"—"|to_nepali_number }} — आ.व. {{ project.fiscalyear.name|default:"—"|to_nepali_number }} — बजेट रु. {{ project.budget|floatformat:0 }}</p>
     </div>
     <a href="{% url 'palika_engineer_project_list' %}" class="btn-chip-brand"><i class="fas fa-arrow-left"></i> योजना सूचीमा फर्कनुहोस्</a>
   </div>

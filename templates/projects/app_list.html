@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% load outputs nepali_filters %}
 {% block title %}वार्षिक खरिद योजना{% endblock %}
 
@@ -23,7 +24,7 @@
     {% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="fiscalyear" value="{{ fy.id }}">
     <div class="flex-1 min-w-[16rem]"><label class="form-label">स्वीकृत निर्णय नं. / मिति <span class="text-rose-500">*</span></label>
       <input name="approval_ref" class="form-input" required placeholder="जस्तै कार्यपालिका निर्णय नं. ५, २०८३-०४-१०"></div>
-    <p class="text-xs text-slate-600 basis-full md:basis-auto">{{ fy.name }} का स्वीकृत हुन बाँकी सबै ({{ counts.draft|npn }}) खरिद योजना स्वीकृत हुनेछन्।</p>
+    <p class="text-xs text-slate-600 basis-full md:basis-auto">{{ fy.name|to_nepali_number }} का स्वीकृत हुन बाँकी सबै ({{ counts.draft|npn }}) खरिद योजना स्वीकृत हुनेछन्।</p>
     <button class="btn-primary"><i class="fas fa-check"></i> स्वीकृत गर्नुहोस्</button>
   </form>
   {% endif %}
@@ -53,10 +54,10 @@
   <form method="get" class="card p-4" data-live-filter>
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
       <div><label class="form-label">आर्थिक वर्ष</label>
-        <select name="fiscalyear" class="form-select">{% for y in fiscal_years %}<option value="{{ y.id }}" {% if fy.id == y.id %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+        <select name="fiscalyear" class="form-select">{% for y in fiscal_years %}<option value="{{ y.id }}" {% if fy.id == y.id %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
       <div><label class="form-label">वडा</label>
         <select name="ward" class="form-select"><option value="">सबै वडा</option>
-          {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></div>
+          {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
       <div><label class="form-label">खरिद विधि</label>
         <select name="method" class="form-select"><option value="">सबै</option>
           {% for c, m in methods %}<option value="{{ c }}" {% if f.method == c %}selected{% endif %}>{{ m.label }}</option>{% endfor %}</select></div>

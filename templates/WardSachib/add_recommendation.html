@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}सिफारिस तयार गर्नुहोस{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-4">
@@ -6,7 +7,7 @@
   <div class="flex items-center justify-between gap-3">
     <div>
       <h1 class="text-lg md:text-xl font-bold text-slate-800">आयोजना सम्झौताका लागि सिफारिस</h1>
-      <p class="text-sm text-slate-500 mt-0.5">{{ project.name }} — वडा नं. {{ sachib.ward.name }}</p>
+      <p class="text-sm text-slate-500 mt-0.5">{{ project.name }} — वडा नं. {{ sachib.ward.name|to_nepali_number }}</p>
     </div>
     <a href="{% url 'ward_engineer_project_photos' project.id %}" class="btn-chip-brand text-xs"><i class="fas fa-camera"></i> फोटो टाइमलाइन हेर्नुहोस्</a>
   </div>

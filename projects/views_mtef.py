@@ -22,6 +22,9 @@ from .views_bank import VIEW, _xlsx, _xlsx_response
 ZERO = Decimal("0")
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _log(request, plan, action, note):
     from usercommittee.models import ActivityLog
 
@@ -55,7 +58,7 @@ def mtef_list(request):
             messages.error(request, "पहिलो वर्ष (आ.व.) छान्नुहोस्।")
             return redirect("mtef_list")
         if MTEFPlan.objects.filter(start_fy=fy).exists():
-            messages.error(request, f"आ.व. {fy.name} बाट सुरु हुने MTEF पहिले नै छ।")
+            messages.error(request, f"आ.व. {npd(fy.name)} बाट सुरु हुने MTEF पहिले नै छ।")
             return redirect("mtef_list")
         plan = mt.create_plan(fy, request.user)
         _log(request, plan, "create", "नयाँ MTEF")
@@ -321,7 +324,7 @@ def mtef_send(request, pid):
             messages.error(request, str(e))
             return redirect("mtef_send", plan.id)
         _log(request, plan, "update", f"बजेटमा: नयाँ {c['create']}, अद्यावधिक {c['update']}")
-        messages.success(request, f"आ.व. {plan.start_fy.name} को बजेटमा {bk.np(c['create'])} नयाँ योजना बने, "
+        messages.success(request, f"आ.व. {npd(plan.start_fy.name)} को बजेटमा {bk.np(c['create'])} नयाँ योजना बने, "
                                   f"{bk.np(c['update'])} को बजेट अद्यावधिक भयो। अब खरिद विधि तोकेर अहिलेकै प्रक्रियामा अघि बढाउनुहोस्।")
         return redirect("mtef_plan", plan.id)
     counts = {k: sum(1 for r in rows if r["action"] == k) for k in ("create", "update", "same", "other_fy")}

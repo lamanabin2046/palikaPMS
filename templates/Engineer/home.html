@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}Engineer Dashboard{% endblock %}
 {% block content %}
 
@@ -61,7 +62,7 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3 text-slate-700">{{ p.name }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ p.ward.name }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ p.ward.name|to_nepali_number }}</td>
         </tr>
         {% empty %}
         <tr><td colspan="3" class="px-5 py-6 text-center text-slate-400">डाटा उपलब्ध छैन</td></tr>
@@ -92,7 +93,7 @@
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3 text-slate-700">{{ b.project.name }}</td>
           <td class="px-5 py-3 text-slate-700">{{ b.bidding_number }}</td>
-          <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-medium px-2.5 py-1">Bidding</span></td>
+          <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-medium px-2.5 py-1">बोलपत्र</span></td>
         </tr>
         {% empty %}
         <tr><td colspan="4" class="px-5 py-6 text-center text-slate-400">डाटा उपलब्ध छैन</td></tr>

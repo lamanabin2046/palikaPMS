@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}योजना अधिकृत ड्यासबोर्ड{% endblock %}
 {% block content %}
 
@@ -73,7 +74,7 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ uc.project.name }}</td>
           <td class="px-5 py-3 text-slate-700">{{ uc.name }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ uc.project.ward.name|default:"—" }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ uc.project.ward.name|default:"—"|to_nepali_number }}</td>
           <td class="px-5 py-3 text-slate-700">{{ uc.deadline }}</td>
           <td class="px-5 py-3">
             {% if uc.days_left < 0 %}

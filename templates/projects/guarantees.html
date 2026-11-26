@@ -34,10 +34,10 @@
     {% endif %}
     <div><label class="form-label">आर्थिक वर्ष</label>
       <select name="fiscalyear" class="form-select"><option value="">सबै</option>
-        {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+        {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">वडा</label>
       <select name="ward" class="form-select"><option value="">सबै वडा</option>
-        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></div>
+        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div class="{% if show_kind %}col-span-2{% else %}md:col-span-3{% endif %}"><label class="form-label">योजना, बैंक, जमानत नं. वा व्यवसायी</label>
       <input type="search" name="q" value="{{ f.q }}" class="form-input" placeholder="खोज्नुहोस्..."></div>
   </div>
@@ -63,7 +63,7 @@
           <td class="px-3 py-2.5 text-slate-400">{{ forloop.counter|npn }}</td>
           <td class="px-3 py-2.5">
             <span class="font-medium text-slate-800">{{ r.p.name }}</span>
-            <span class="block text-[11px] text-slate-400">{{ r.party|default:'—' }}{% if show_kind %} · {{ r.kind_label }}{% endif %} · वडा नं. {{ r.p.ward.name|default:'—' }}</span>
+            <span class="block text-[11px] text-slate-400">{{ r.party|default:'—' }}{% if show_kind %} · {{ r.kind_label }}{% endif %} · वडा नं. {{ r.p.ward.name|default:'—'|to_nepali_number }}</span>
           </td>
           <td class="px-3 py-2.5">{{ r.bank }}</td>
           <td class="px-3 py-2.5 text-right whitespace-nowrap font-medium">{{ r.amount|money }}{% if r.against %}<span class="block text-[10px] font-normal text-slate-400">{% if which == 'pg' %}सम्झौता{% else %}अग्रिम{% endif %} रु. {{ r.against|money:0 }}</span>{% endif %}</td>

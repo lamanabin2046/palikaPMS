@@ -12,7 +12,7 @@
     {% else %}
     <form id="b2m" hx-post="{% url 'bank_to_mtef' b.id %}" hx-target="#b2m-msg" class="space-y-3">{% csrf_token %}
       <div><label class="form-label">कुन MTEF मा</label>
-        <select name="plan" class="form-select">{% for x in drafts %}<option value="{{ x.id }}">आ.व. {{ x }} (मस्यौदा)</option>{% endfor %}</select></div>
+        <select name="plan" class="form-select">{% for x in drafts %}<option value="{{ x.id }}">आ.व. {{ x|to_nepali_number }} (मस्यौदा)</option>{% endfor %}</select></div>
       <div class="rounded-xl border border-slate-200 p-3 text-sm">
         <p class="text-xs text-slate-500 mb-1">सुरुको वर्षगत बाँडफाँड (MTEF पेजमा बदल्न मिल्छ)</p>
         <div class="grid grid-cols-3 gap-2 text-center">{% for v in phase %}<div class="rounded-lg bg-slate-50 p-2"><p class="text-[11px] text-slate-500">वर्ष {{ forloop.counter|to_nepali_number }}</p><p class="font-semibold">रु. {{ v|money:0 }}</p></div>{% endfor %}</div>

@@ -40,10 +40,10 @@
         {% for k, l in kinds %}<option value="{{ k }}" {% if f.kind == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
     <div><label class="form-label">आर्थिक वर्ष</label>
       <select name="fiscalyear" class="form-select"><option value="all">सबै</option>
-        {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+        {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">वडा</label>
       <select name="ward" class="form-select"><option value="">सबै वडा</option>
-        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></div>
+        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div class="col-span-2"><label class="form-label">समिति / निर्माण व्यवसायी / फर्म वा योजना</label>
       <input type="search" name="q" value="{{ f.q }}" class="form-input" placeholder="नाम खोज्नुहोस्..."></div>
   </div>
@@ -58,7 +58,7 @@
         <p class="font-semibold text-slate-800">{{ p.name }}</p>
         <p class="text-xs text-slate-500 mt-0.5">
           <span class="rounded px-1.5 py-0.5 {% if it.kind == 'uc' %}bg-amber-50 text-amber-700{% elif it.kind == 'bid' %}bg-sky-50 text-sky-700{% else %}bg-violet-50 text-violet-700{% endif %}">{{ it.kind_label }}</span>
-          {{ it.party_label }}: <b class="text-slate-700">{{ it.party|default:'—' }}</b> · वडा नं. {{ p.ward.name|default:'—' }}{% if p.fiscalyear %} · आ.व. {{ p.fiscalyear.name }}{% endif %}
+          {{ it.party_label }}: <b class="text-slate-700">{{ it.party|default:'—' }}</b> · वडा नं. {{ p.ward.name|default:'—'|to_nepali_number }}{% if p.fiscalyear %} · आ.व. {{ p.fiscalyear.name|to_nepali_number }}{% endif %}
         </p>
       </div>
       <div class="text-right">

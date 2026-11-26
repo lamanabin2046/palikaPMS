@@ -1,3 +1,4 @@
+{% load nepali_date %}
 <!DOCTYPE html>
 {% load outputs %}
 <html lang="ne"><head><meta charset="UTF-8"><title>राजस्व ठेक्का प्रतिवेदन</title>
@@ -11,7 +12,7 @@
 </style></head>
 <body onload="window.print()">
   {% include 'includes/letterhead.html' with branch="(राजस्व शाखा)" %}
-  <h2>राजस्व ठेक्का प्रतिवेदन{% if fy_name %} — आ.व. {{ fy_name }}{% endif %}</h2>
+  <h2>राजस्व ठेक्का प्रतिवेदन{% if fy_name %} — आ.व. {{ fy_name|to_nepali_number }}{% endif %}</h2>
   <p class="c">मिति: {{ today|bs }}</p>
   <table>
     <tr><th>क्र.सं.</th><th>राजस्व स्रोत</th><th>वडा</th><th>प्रकार</th><th>ठेकेदार</th><th>अनुमानित</th><th>न्यूनतम कबोल</th><th>सम्झौता</th><th>असुल</th><th>विलम्ब शुल्क</th><th>बाँकी</th><th>बक्यौता</th><th>स्थिति</th></tr>

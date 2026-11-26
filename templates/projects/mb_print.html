@@ -1,3 +1,4 @@
+{% load nepali_date %}
 <!DOCTYPE html>
 {% load letters outputs %}
 <html lang="ne">
@@ -31,7 +32,7 @@
 {% if bill %}
 {% editable_letter "mb.abstract" "नापी किताब: बिलको सार" %}
   <h2>बिल नं. {{ bill|npn }} — नापीको सार (Abstract of Measurement)</h2>
-  <p class="sub">{{ project.name }} · वडा नं. {{ project.ward.name|npn }} · आ.व. {{ project.fiscalyear.name }}</p>
+  <p class="sub">{{ project.name }} · वडा नं. {{ project.ward.name|npn }} · आ.व. {{ project.fiscalyear.name|to_nepali_number }}</p>
   <table>
     <tr><th rowspan="2">क्र.सं.</th><th rowspan="2">कामको विवरण</th><th rowspan="2">एकाइ</th><th rowspan="2">दर</th>
         <th colspan="2">अघिल्लो बिलसम्म</th><th colspan="2">यस बिलमा</th><th colspan="2">हालसम्म</th></tr>
@@ -48,7 +49,7 @@
 {% else %}
 {% editable_letter "mb.book" "नापी किताब" %}
   <h2>नापी किताब (Measurement Book)</h2>
-  <p class="sub">{{ project.name }} · वडा नं. {{ project.ward.name|npn }} · आ.व. {{ project.fiscalyear.name }} · भौतिक प्रगति {{ s.progress|npn }}% · मिति {{ today|bs }}</p>
+  <p class="sub">{{ project.name }} · वडा नं. {{ project.ward.name|npn }} · आ.व. {{ project.fiscalyear.name|to_nepali_number }} · भौतिक प्रगति {{ s.progress|npn }}% · मिति {{ today|bs }}</p>
   <table>
     <tr><th>मिति</th><th>स्थान / चेनेज</th><th>संख्या</th><th>लम्बाइ</th><th>चौडाइ</th><th>उचाइ</th><th>परिमाण</th><th>बिल नं.</th><th>कैफियत</th></tr>
     {% for r in rows %}

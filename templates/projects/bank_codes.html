@@ -19,7 +19,7 @@
       <tbody class="divide-y divide-slate-100">
       {% for r in rows %}{% with b=r.b d=r.d %}<tr>
         <td class="px-3 py-2"><input type="checkbox" name="bid" value="{{ b.id }}" {% if not d %}disabled{% endif %}></td>
-        <td class="px-3 py-2">{{ b.name }}<div class="text-xs text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name }}{% endif %}</div></td>
+        <td class="px-3 py-2">{{ b.name }}<div class="text-xs text-slate-400">{{ b.code }}{% if b.ward %} · वडा {{ b.ward.name|to_nepali_number }}{% endif %}</div></td>
         <td class="px-3 py-2 text-xs">{{ b.sector.name|default:"—" }}</td>
         <td class="px-3 py-2 text-xs text-slate-500">{{ b.priority|default:"—" }} · {{ b.pillar.name|default:"स्तम्भ —" }} · SDG {{ b.sdg|default:"—" }} · {{ b.get_gender_display|default:"लैङ्गिक —" }} · {{ b.get_climate_display|default:"जलवायु —" }}</td>
         <td class="px-3 py-2 text-xs">{% if d %}{{ d.priority|default:"—" }} · {{ d.pillar.name|default:"—" }} · SDG {{ d.sdg|default:"—" }} · {{ d.gender|default:"—" }} · {{ d.climate|default:"—" }}{% else %}<span class="text-amber-700">सुझाव छैन</span>{% endif %}</td>

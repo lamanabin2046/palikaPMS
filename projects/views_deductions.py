@@ -22,6 +22,9 @@ UPLOAD_TYPES = (".pdf", ".jpg", ".jpeg", ".png")
 UPLOAD_MAX_MB = 10
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _user_wards(user):
     from usercommittee.views_workflow import _user_wards as uw
 
@@ -50,7 +53,7 @@ def _base(request, default_latest=True):
     all_wards = sorted_wards(Ward.objects.filter(id__in=my_wards) if my_wards is not None else None)
     fy_name = next((x.name for x in fys if str(x.id) == fy), "")
     desc = [KINDS[kind] if kind else "सबै खरिद विधि",
-            f"आ.व. {fy_name}" if fy_name else "सबै आर्थिक वर्ष",
+            f"आ.व. {npd(fy_name)}" if fy_name else "सबै आर्थिक वर्ष",
             next((f"वडा नं. {w.name}" for w in all_wards if str(w.id) == ward), "सबै वडा")]
     keep = request.GET.copy()
     keep.pop("export", None)

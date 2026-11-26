@@ -9,7 +9,7 @@
       </p>
       <h2 class="text-lg font-bold text-slate-800 truncate mt-0.5">{{ project.name }}</h2>
       <p class="text-xs text-slate-500 mt-0.5">
-        वडा नं. {{ project.ward.name|to_nepali_number }} · {{ project.fiscalyear.name }}
+        वडा नं. {{ project.ward.name|to_nepali_number }} · {{ project.fiscalyear.name|to_nepali_number }}
         <span class="badge bg-violet-50 text-violet-700 ml-1 !py-0.5">{{ mode_label }}</span>
       </p>
     </div>

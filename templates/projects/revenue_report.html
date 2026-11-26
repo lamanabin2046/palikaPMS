@@ -15,8 +15,8 @@
     </div>
   </div>
   <form method="get" class="card p-4 flex flex-wrap gap-3">
-    <select name="fiscalyear" class="form-select !w-auto"><option value="">सबै आ.व.</option>{% for x in fiscal_years %}<option value="{{ x.id }}" {% if f.fiscalyear == x.id|stringformat:'s' %}selected{% endif %}>{{ x.name }}</option>{% endfor %}</select>
-    <select name="ward" class="form-select !w-auto"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select>
+    <select name="fiscalyear" class="form-select !w-auto"><option value="">सबै आ.व.</option>{% for x in fiscal_years %}<option value="{{ x.id }}" {% if f.fiscalyear == x.id|stringformat:'s' %}selected{% endif %}>{{ x.name|to_nepali_number }}</option>{% endfor %}</select>
+    <select name="ward" class="form-select !w-auto"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select>
     <select name="category" class="form-select !w-auto"><option value="">सबै प्रकार</option>{% for k, v in categories %}<option value="{{ k }}" {% if f.category == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
     <select name="group" class="form-select !w-auto"><option value="">समूह नगर्ने</option><option value="ward" {% if f.group == 'ward' %}selected{% endif %}>वडाअनुसार</option><option value="category" {% if f.group == 'category' %}selected{% endif %}>प्रकारअनुसार</option><option value="fiscalyear" {% if f.group == 'fiscalyear' %}selected{% endif %}>आ.व. अनुसार</option></select>
     <button class="btn-primary">हेर्नुहोस्</button>
@@ -40,7 +40,7 @@
       <th class="px-3 py-2.5 text-right">सम्झौता</th><th class="px-3 py-2.5 text-right">न्यूनतमभन्दा</th><th class="px-3 py-2.5 text-right">असुल</th><th class="px-3 py-2.5 text-right">बाँकी</th><th class="px-3 py-2.5 text-left">स्थिति</th></tr></thead>
     <tbody class="divide-y divide-slate-100">
       {% for r in rows %}<tr>
-        <td class="px-3 py-2"><a href="{% url 'revenue_list' %}?open={{ r.s.id }}" class="font-medium text-slate-800 hover:text-brand-700">{{ r.s.name }}</a><span class="block text-[11px] text-slate-400">आ.व. {{ r.s.fiscalyear.name }} · {% if r.s.ward %}वडा {{ r.s.ward.name|npn }} · {% endif %}{{ r.s.get_category_display }}</span></td>
+        <td class="px-3 py-2"><a href="{% url 'revenue_list' %}?open={{ r.s.id }}" class="font-medium text-slate-800 hover:text-brand-700">{{ r.s.name }}</a><span class="block text-[11px] text-slate-400">आ.व. {{ r.s.fiscalyear.name|to_nepali_number }} · {% if r.s.ward %}वडा {{ r.s.ward.name|npn }} · {% endif %}{{ r.s.get_category_display }}</span></td>
         <td class="px-3 py-2">{{ r.s.selected.name|default:'—' }}</td>
         <td class="px-3 py-2 text-right">{{ r.est|money:0 }}</td><td class="px-3 py-2 text-right">{{ r.min_bid|money:0 }}</td><td class="px-3 py-2 text-right font-semibold">{{ r.contract|money:0 }}</td>
         <td class="px-3 py-2 text-right">{% if r.uplift is not None %}{{ r.uplift|floatformat:1|npn }}%{% else %}—{% endif %}</td>

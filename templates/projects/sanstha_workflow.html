@@ -92,7 +92,7 @@
       </select>
       <select name="ward" class="form-select !w-auto min-w-[9rem]">
         <option value="">सबै वडा</option>
-        {% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}
+        {% for w in wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}
       </select>
       <select name="stage" class="form-select !w-auto min-w-[11rem]">
         <option value="">सबै चरण</option>
@@ -125,7 +125,7 @@
                     hx-get="{% url 'sanstha_workflow_detail' p.id %}" hx-target="#wf-detail-{{ p.id }}" hx-swap="innerHTML">
               {{ p.name }}
             </button>
-            <div class="text-xs text-slate-500 mt-0.5">वडा {{ p.ward.name|default:"-" }}{% if s.org %} · {{ s.org }}{% endif %}{% if s.amount %} · रु. {{ s.amount|money:0 }}{% endif %}</div>
+            <div class="text-xs text-slate-500 mt-0.5">वडा {{ p.ward.name|default:"-"|to_nepali_number }}{% if s.org %} · {{ s.org }}{% endif %}{% if s.amount %} · रु. {{ s.amount|money:0 }}{% endif %}</div>
             <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-0.5">
               {% if p.fiscalyear %}<span>आ.व. {{ p.fiscalyear.name|to_nepali_number }}</span>{% endif %}
               {% if s.invited %}<span>{{ s.invited|length|to_nepali_number }} संस्था आमन्त्रित</span>{% endif %}

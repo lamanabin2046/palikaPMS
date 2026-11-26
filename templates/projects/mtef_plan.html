@@ -36,7 +36,7 @@
       {% if can %}<input name="resource_ref" value="{{ plan.resource_ref }}" class="form-input !py-1" style="max-width:26rem" placeholder="जस्तै: निर्णय नं. १, २०८२-१२-१५">{% else %}<b>{{ plan.resource_ref|default:"—" }}</b>{% endif %}
     </div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">स्रोत</th>{% for y in plan.years %}<th class="px-3 py-2 text-right font-medium">आ.व. {{ y }}</th>{% endfor %}</tr></thead>
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">स्रोत</th>{% for y in plan.years %}<th class="px-3 py-2 text-right font-medium">आ.व. {{ y|to_nepali_number }}</th>{% endfor %}</tr></thead>
       <tbody class="divide-y divide-slate-100">
       {% for c in ceilings %}<tr><td class="px-4 py-1.5">{{ c.head.name }}</td>
         {% if can %}<td class="px-2 py-1.5"><input data-money inputmode="numeric" name="c{{ c.id }}_y1" value="{{ c.y1|floatformat:0 }}" class="form-input text-right !py-1"></td><td class="px-2 py-1.5"><input data-money inputmode="numeric" name="c{{ c.id }}_y2" value="{{ c.y2|floatformat:0 }}" class="form-input text-right !py-1"></td><td class="px-2 py-1.5"><input data-money inputmode="numeric" name="c{{ c.id }}_y3" value="{{ c.y3|floatformat:0 }}" class="form-input text-right !py-1"></td>

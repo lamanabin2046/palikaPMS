@@ -1,4 +1,5 @@
 {% extends 'projects/revenue_public_base.html' %}
+{% load nepali_date %}
 {% load outputs %}
 {% block body %}
 <h1 class="text-xl font-bold">राजस्व ठेक्काका बोलपत्र सूचना</h1>
@@ -25,7 +26,7 @@
 {% if awarded %}
 <section class="card overflow-hidden">
   <div class="px-5 py-3 border-b bg-slate-50 font-semibold">ठेक्का स्वीकृत भएका</div>
-  <div class="divide-y text-sm">{% for s in awarded %}<div class="px-5 py-3 flex flex-wrap justify-between gap-3"><span>{{ s.name }} <span class="text-slate-400">· आ.व. {{ s.fiscalyear.name }}</span></span><span>{{ s.selected.name }} — रु. {{ s.selected.amount|money:0 }}</span></div>{% endfor %}</div>
+  <div class="divide-y text-sm">{% for s in awarded %}<div class="px-5 py-3 flex flex-wrap justify-between gap-3"><span>{{ s.name }} <span class="text-slate-400">· आ.व. {{ s.fiscalyear.name|to_nepali_number }}</span></span><span>{{ s.selected.name }} — रु. {{ s.selected.amount|money:0 }}</span></div>{% endfor %}</div>
 </section>
 {% endif %}
 {% endblock %}

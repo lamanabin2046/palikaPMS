@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% load outputs %}
 {% block title %}{{ method_label }}{% endblock %}
 
@@ -29,9 +30,9 @@
     <input type="hidden" name="method" value="{{ method }}"><input type="hidden" name="stage" value="{{ f.stage }}">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
       <div><label class="form-label">आर्थिक वर्ष</label>
-        <select name="fiscalyear" class="form-select"><option value="">सबै</option>{% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+        <select name="fiscalyear" class="form-select"><option value="">सबै</option>{% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
       <div><label class="form-label">वडा</label>
-        <select name="ward" class="form-select"><option value="">सबै वडा</option>{% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name }}</option>{% endfor %}</select></div>
+        <select name="ward" class="form-select"><option value="">सबै वडा</option>{% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा नं. {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
       <div class="col-span-2"><label class="form-label">योजना वा फर्म / संस्था</label>
         <input type="search" name="q" value="{{ f.q }}" class="form-input" placeholder="खोज्नुहोस्..."></div>
     </div>
@@ -52,7 +53,7 @@
           {% for r in rows %}
           <tr class="{% if r.summary.overdue %}bg-amber-50/40{% endif %}">
             <td class="px-3 py-2.5"><a href="{% url 'minor_detail' r.p.id %}" class="font-medium text-slate-800 hover:text-brand-700">{{ r.p.name }}</a>
-              <span class="block text-[11px] text-slate-400">वडा नं. {{ r.p.ward.name|default:'—'|npn }} · {{ r.p.fiscalyear.name }}{% if r.m.selected %} · {{ r.m.selected.name }}{% endif %}</span></td>
+              <span class="block text-[11px] text-slate-400">वडा नं. {{ r.p.ward.name|default:'—'|npn }} · {{ r.p.fiscalyear.name|to_nepali_number }}{% if r.m.selected %} · {{ r.m.selected.name }}{% endif %}</span></td>
             {% if not method %}<td class="px-3 py-2.5 whitespace-nowrap">{{ r.label }}</td>{% endif %}
             <td class="px-3 py-2.5 text-right whitespace-nowrap">{% if r.m %}{{ r.m.estimate_amount|money:0 }}{% else %}—{% endif %}</td>
             <td class="px-3 py-2.5">

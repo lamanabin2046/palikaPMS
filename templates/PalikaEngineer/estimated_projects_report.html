@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% block title %}लागत अनुमान प्रतिवेदन{% endblock %}
 {% block content %}
 <div class="space-y-4">
@@ -32,7 +33,7 @@
           <tr>
             <td>{{ forloop.counter }}</td>
             <td><a href="{% url 'palika_engineer_project_detail' i.project.id %}" class="text-brand-600 font-semibold hover:underline">{{ i.project.name }}</a></td>
-            <td>{{ i.project.ward.name|default:"—" }}</td>
+            <td>{{ i.project.ward.name|default:"—"|to_nepali_number }}</td>
             <td class="text-right">{{ i.budget|floatformat:2 }}/-</td>
             <td class="text-right">{{ i.contingency_amount|floatformat:2 }}/-</td>
             <td class="text-right">{{ i.user_contribution|floatformat:2 }}/-</td>

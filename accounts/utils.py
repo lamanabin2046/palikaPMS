@@ -95,3 +95,7 @@ class NumberToNepaliWordsEnglish:
 
         return " ".join(words).strip()
 
+
+def npd(value):
+    """अङ्ग्रेजी अङ्क → नेपाली अङ्क (आ.व., वडा नं. जस्ता देखिने पाठका लागि)."""
+    return str(value if value is not None else "").translate(str.maketrans("0123456789", "०१२३४५६७८९"))

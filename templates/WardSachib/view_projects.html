@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}सिफारिस तयार गर्नुहोस{% endblock %}
 {% block content %}
 <div class="space-y-4">
 
   <div>
-    <h1 class="text-lg md:text-xl font-bold text-slate-800">वडा नं. {{ sachib.ward.name }} – सिफारिस तयार गर्नुहोस्</h1>
+    <h1 class="text-lg md:text-xl font-bold text-slate-800">वडा नं. {{ sachib.ward.name|to_nepali_number }} – सिफारिस तयार गर्नुहोस्</h1>
     <p class="text-sm text-slate-500 mt-0.5">लागत अनुमान तयार भएका योजनाहरुको सिफारिस स्थिति</p>
   </div>
 

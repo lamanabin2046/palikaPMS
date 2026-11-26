@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% block title %}योजनाको विवरण{% endblock %}
 {% block content %}
 <div class="space-y-4">
@@ -6,7 +7,7 @@
   <div class="flex items-center justify-between">
     <h1 class="text-lg md:text-xl font-bold text-slate-800">योजनाको विवरण</h1>
     <a href="{% url 'add_project' %}" class="btn-primary">
-      <i class="fas fa-plus"></i> Add Project
+      <i class="fas fa-plus"></i> योजना थप्नुहोस्
     </a>
   </div>
 
@@ -23,7 +24,7 @@
         <select name="ward" class="form-select w-full">
           <option value="">सबै वडा</option>
           {% for w in wards %}
-          <option value="{{ w.id }}" {% if selected_ward == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+          <option value="{{ w.id }}" {% if selected_ward == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name|to_nepali_number }}</option>
           {% endfor %}
         </select>
       </div>
@@ -32,7 +33,7 @@
         <select name="fiscalyear" class="form-select w-full">
           <option value="">सबै आ.व.</option>
           {% for fy in fiscalyears %}
-          <option value="{{ fy.id }}" {% if selected_fiscalyear == fy.id|stringformat:"s" %}selected{% endif %}>{{ fy.name }}</option>
+          <option value="{{ fy.id }}" {% if selected_fiscalyear == fy.id|stringformat:"s" %}selected{% endif %}>{{ fy.name|to_nepali_number }}</option>
           {% endfor %}
         </select>
       </div>
@@ -88,9 +89,9 @@
           {% for i in projects %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ i.fiscalyear.name }}</td>
+            <td>{{ i.fiscalyear.name|to_nepali_number }}</td>
             <td><a href="{% url 'project_timeline' i.id %}" class="text-brand-600 font-semibold hover:underline">{{ i.name }}</a>{% if i.sector %}<span class="block text-[11px] text-slate-400">{{ i.sector.name }}{% if i.subsector %} › {{ i.subsector.name }}{% endif %}</span>{% endif %}</td>
-            <td>{{ i.ward.name }}</td>
+            <td>{{ i.ward.name|to_nepali_number }}</td>
             <td>{{ i.project_type.type }}</td>
             <td>{{ i.address }}</td>
             <td class="text-right font-semibold text-emerald-600">रु. {{ i.budget }}</td>

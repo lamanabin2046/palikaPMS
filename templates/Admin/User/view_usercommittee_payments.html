@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% block title %}भुक्तानी विवरण{% endblock %}
 {% block content %}
 <div class="space-y-4">
@@ -6,7 +7,7 @@
   <div class="flex items-center justify-between flex-wrap gap-2">
     <h1 class="text-lg md:text-xl font-bold text-slate-800">उपभोक्ता समितिको विवरण (भुक्तानी भएका आयोजनाहरू)</h1>
     <a href="{% url 'download_usercommittee_payments_excel' %}" hx-boost="false" class="btn-success">
-      <i class="fas fa-file-excel"></i> Download Excel
+      <i class="fas fa-file-excel"></i> Excel डाउनलोड
     </a>
   </div>
 
@@ -34,9 +35,9 @@
             <td class="font-semibold text-slate-800">{{ i.project.user_committee.name }}</td>
             <td>{{ i.project.user_committee.chairman_name }}</td>
             <td>{{ i.project.user_committee.chairman_mobile }}</td>
-            <td>{{ i.project.ward.name }}</td>
+            <td>{{ i.project.ward.name|to_nepali_number }}</td>
             <td>{{ i.project.budget }}</td>
-            <td>{{ i.project.fiscalyear.name }}</td>
+            <td>{{ i.project.fiscalyear.name|to_nepali_number }}</td>
             <td class="text-center">
               <span class="badge bg-emerald-100 text-emerald-700">भुक्तानी भयो</span>
             </td>

@@ -5,10 +5,10 @@
 <div class="max-w-6xl mx-auto space-y-4">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div><p class="text-xs font-medium text-brand-700"><i class="fas fa-box-archive"></i> योजना तर्जुमा</p>
-      <h1 class="text-xl md:text-2xl font-bold text-slate-800">योजना vs बजेट vs खर्च — आ.व. {{ fy.name|default:"—" }}</h1>
+      <h1 class="text-xl md:text-2xl font-bold text-slate-800">योजना vs बजेट vs खर्च — आ.व. {{ fy.name|default:"—"|to_nepali_number }}</h1>
       <p class="text-sm text-slate-500">MTEF पहिलो वर्ष{% if not plan %} (यो आ.व. को MTEF छैन){% endif %}, वार्षिक बजेट, सम्झौता र भुक्तानी — कोडअनुसार{% if outside %} · {{ outside|to_nepali_number }} योजना बैंकसँग नजोडिएका{% endif %}</p></div>
     <div class="flex gap-2">
-      <form method="get" class="flex gap-2"><input type="hidden" name="dim" value="{{ dim }}"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy and x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endfor %}</select></form>
+      <form method="get" class="flex gap-2"><input type="hidden" name="dim" value="{{ dim }}"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy and x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name|to_nepali_number }}</option>{% endfor %}</select></form>
       <a href="?fiscalyear={{ fy.id }}&dim={{ dim }}&export=xlsx" class="btn-secondary"><i class="fas fa-file-excel"></i> Excel</a>
     </div>
   </div>

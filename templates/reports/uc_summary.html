@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% load outputs nepali_filters %}
 {% block title %}{{ report_title }}{% endblock %}
 
@@ -116,7 +117,7 @@
       <tbody class="divide-y divide-slate-100">
         {% for w in wards_table %}
         <tr>
-          <td class="px-3 py-2">{% if w.ward %}वडा नं. {{ w.ward.name }}{% else %}अन्य{% endif %}</td>
+          <td class="px-3 py-2">{% if w.ward %}वडा नं. {{ w.ward.name|to_nepali_number }}{% else %}अन्य{% endif %}</td>
           <td class="px-3 py-2 text-right">{{ w.count|npn }}</td>
           <td class="px-3 py-2 text-right">{{ w.by_status.completed|npn }}</td>
           <td class="px-3 py-2 text-right">{{ w.allocated|money }}</td>

@@ -16,6 +16,9 @@ from .reports import KIND_PTYPE, KINDS, STATUS, all_rows, by_kind, by_sector, by
 from .views_workflow import _user_wards
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _filtered(request):
     """(rows, ctx) — फिल्टर: खरिद विधि, आ.व. (default: पछिल्लो), वडा, स्थिति, कामको प्रकार."""
     qs = Project.objects.filter(procurement_type__code__in=list(KINDS))
@@ -51,7 +54,7 @@ def _filtered(request):
 
     fy_name = next((x.name for x in fys if str(x.id) == fy), "")
     desc = [KINDS[kind] if kind else "सबै खरिद विधि"]
-    desc.append(f"आ.व. {fy_name}" if fy_name else "सबै आर्थिक वर्ष")
+    desc.append(f"आ.व. {npd(fy_name)}" if fy_name else "सबै आर्थिक वर्ष")
     desc.append(f"वडा नं. {wards[0].name}" if ward.isdigit() and wards else "सबै वडा")
     if status:
         desc.append(STATUS[status])

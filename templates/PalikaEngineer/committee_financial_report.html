@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}उपभोक्ता समिति वित्तीय प्रतिवेदन{% endblock %}
 {% block content %}
 
@@ -20,7 +21,7 @@
       <select name="ward" class="form-select w-full">
         <option value="">सबै वडा</option>
         {% for w in wards %}
-        <option value="{{ w.id }}" {% if selected_ward == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+        <option value="{{ w.id }}" {% if selected_ward == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name|to_nepali_number }}</option>
         {% endfor %}
       </select>
     </div>
@@ -29,7 +30,7 @@
       <select name="fiscalyear" class="form-select w-full">
         <option value="">सबै आ.व.</option>
         {% for fy in fiscalyears %}
-        <option value="{{ fy.id }}" {% if selected_fiscalyear == fy.id|stringformat:"s" %}selected{% endif %}>{{ fy.name }}</option>
+        <option value="{{ fy.id }}" {% if selected_fiscalyear == fy.id|stringformat:"s" %}selected{% endif %}>{{ fy.name|to_nepali_number }}</option>
         {% endfor %}
       </select>
     </div>
@@ -109,8 +110,8 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3 text-slate-700">{{ c.project.name }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ c.project.ward.name|default:"—" }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ c.project.fiscalyear.name|default:"—" }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ c.project.ward.name|default:"—"|to_nepali_number }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ c.project.fiscalyear.name|default:"—"|to_nepali_number }}</td>
           <td class="px-5 py-3 text-right text-slate-700">रु {{ c.project.budget|floatformat:0 }}</td>
           <td class="px-5 py-3 text-right text-slate-700">
             {% if c.project.cost_estimate %}रु {{ c.project.cost_estimate.total_cost|floatformat:0 }}{% else %}—{% endif %}

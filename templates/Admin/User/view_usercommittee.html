@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_date %}
 {% block title %}उपभोक्ता समितिको विवरण{% endblock %}
 {% block content %}
 <div class="space-y-4">
@@ -29,9 +30,9 @@
             <td class="font-semibold text-slate-800">{{ i.name }}</td>
             <td>{{ i.chairman_name }}</td>
             <td>{{ i.chairman_mobile }}</td>
-            <td>{{ i.project.ward.name }}</td>
+            <td>{{ i.project.ward.name|to_nepali_number }}</td>
             <td>{{ i.project.budget }}</td>
-            <td>{{ i.project.fiscalyear.name }}</td>
+            <td>{{ i.project.fiscalyear.name|to_nepali_number }}</td>
             <td class="text-center">
               <div class="flex items-center justify-center gap-2">
                 <a href="{% url 'edit_usercommittee' i.id %}" class="btn-chip-emerald" title="उपभोक्ता समितिको विवरण सच्याउनुहोस्">

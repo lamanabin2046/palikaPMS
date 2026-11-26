@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}वडाका योजनाहरू{% endblock %}
 {% block content %}
 
 <!-- ================= PAGE HEADER ================= -->
 <div class="mb-6">
   <h1 class="text-xl md:text-2xl font-bold text-slate-800">वडाका योजनाहरू</h1>
-  <p class="text-sm text-slate-500 mt-0.5">वडा नं. {{ sachib.ward.name }} – {{ sachib.name }}</p>
+  <p class="text-sm text-slate-500 mt-0.5">वडा नं. {{ sachib.ward.name|to_nepali_number }} – {{ sachib.name }}</p>
 </div>
 
 <div class="bg-white rounded-2xl border border-slate-200 shadow-card">
@@ -29,7 +30,7 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3 text-slate-700">{{ p.name }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ p.fiscalyear.name|default:"—" }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ p.fiscalyear.name|default:"—"|to_nepali_number }}</td>
           <td class="px-5 py-3 text-slate-700">रु. {{ p.budget|floatformat:0 }}</td>
           <td class="px-5 py-3">
             {% if p.user_committee %}

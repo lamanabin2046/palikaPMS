@@ -10,6 +10,9 @@ from decimal import Decimal
 ZERO = Decimal("0")
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def fy_range(fy):
     """'2083/84' → (२०८३ साउन १, २०८४ असार मसान्त) इ.सं. मा; नमिले (None, None)."""
     from biddings.views_workflow import to_ad
@@ -53,7 +56,7 @@ def build(fy, wards=None):
     def sheet(title, header, rows, widths=None, first=False):
         ws = wb.active if first else wb.create_sheet()
         ws.title = title[:31]
-        ws.append([f"{title} — आ.व. {fy.name}"])
+        ws.append([f"{title} — आ.व. {npd(fy.name)}"])
         ws["A1"].font = Font(bold=True, size=13)
         ws.append(header)
         for c in ws[2]:

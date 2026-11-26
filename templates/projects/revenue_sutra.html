@@ -15,7 +15,7 @@
     {% csrf_token %}
     <p class="text-sm text-slate-600">SuTRA बाट राजस्व / आम्दानीको विवरण (रसिद नं. र रकम भएको) Excel वा CSV मा निकालेर यहाँ अपलोड गर्नुहोस्। शीर्ष पङ्क्तिमा “रसिद नं.” र “रकम” (Receipt No, Amount) चाहिन्छ। रकममा विलम्ब शुल्क समेत भए पनि मिल्छ।</p>
     <div class="flex flex-wrap items-center gap-3">
-      <select name="fiscalyear" class="form-select !w-auto"><option value="">सबै आ.व.</option>{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy == x.id|stringformat:'s' %}selected{% endif %}>{{ x.name }}</option>{% endfor %}</select>
+      <select name="fiscalyear" class="form-select !w-auto"><option value="">सबै आ.व.</option>{% for x in fiscal_years %}<option value="{{ x.id }}" {% if fy == x.id|stringformat:'s' %}selected{% endif %}>{{ x.name|to_nepali_number }}</option>{% endfor %}</select>
       <input type="file" name="file" accept=".xlsx,.csv" class="form-input max-w-xs" required>
       <button class="btn-primary"><i class="fas fa-code-compare"></i> मिलान गर्नुहोस्</button>
     </div>

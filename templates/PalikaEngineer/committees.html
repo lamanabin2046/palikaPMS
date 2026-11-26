@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load nepali_date %}
 {% block title %}उपभोक्ता समिति सूची{% endblock %}
 {% block content %}
 
@@ -31,7 +32,7 @@
         <tr class="hover:bg-slate-50">
           <td class="px-5 py-3 text-slate-700">{{ forloop.counter }}</td>
           <td class="px-5 py-3 text-slate-700">{{ c.project.name }}</td>
-          <td class="px-5 py-3 text-slate-700">{{ c.project.ward.name|default:"—" }}</td>
+          <td class="px-5 py-3 text-slate-700">{{ c.project.ward.name|default:"—"|to_nepali_number }}</td>
           <td class="px-5 py-3 text-slate-700">{{ c.name }}</td>
           <td class="px-5 py-3 text-slate-700">{{ c.chairman_name }}</td>
           <td class="px-5 py-3 text-slate-700">{{ c.secretary_name }}</td>

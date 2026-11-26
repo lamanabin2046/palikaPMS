@@ -22,7 +22,7 @@
         {% for y in fiscal_years %}<option value="{{ y.id }}" {% if f.fiscalyear == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">वडा</label>
       <select name="ward" class="form-select"><option value="">सबै वडा</option>
-        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा {{ w.name }}</option>{% endfor %}</select></div>
+        {% for w in all_wards %}<option value="{{ w.id }}" {% if f.ward == w.id|stringformat:'s' %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <div><label class="form-label">खरिद प्रकार</label>
       <select name="procurement_type" class="form-select"><option value="">सबै</option>
         {% for t in procurement_types %}<option value="{{ t.id }}" {% if f.procurement_type == t.id|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></div>
@@ -44,7 +44,7 @@
         <th class="px-3 py-2.5 font-medium text-right">जम्मा</th>
         <th class="px-3 py-2.5 font-medium">एकाइ</th>
         <th class="px-3 py-2.5 font-medium text-right">योजना</th>
-        {% for w in wards %}<th class="px-2 py-2.5 font-medium text-right whitespace-nowrap">वडा {{ w.name }}</th>{% endfor %}
+        {% for w in wards %}<th class="px-2 py-2.5 font-medium text-right whitespace-nowrap">वडा {{ w.name|to_nepali_number }}</th>{% endfor %}
       </tr></thead>
       <tbody class="divide-y divide-slate-100">
         {% for r in g.rows %}
@@ -53,7 +53,7 @@
             <details>
               <summary class="cursor-pointer text-slate-800 font-medium">{{ r.ind.name }}{% if not r.ind.is_active %} <span class="text-[10px] text-slate-400">(निष्क्रिय)</span>{% endif %}</summary>
               <ul class="mt-2 space-y-1 text-xs text-slate-600">
-                {% for p, q in r.projects %}<li class="flex justify-between gap-3 border-b border-dashed border-slate-100 pb-1"><span>{{ p.name }} <span class="text-slate-400">· वडा {{ p.ward.name }}{% if p.fiscalyear %} · {{ p.fiscalyear.name|to_nepali_number }}{% endif %}</span></span><span class="font-medium whitespace-nowrap">{{ q|qty|to_nepali_number }} {{ r.ind.unit }}</span></li>{% endfor %}
+                {% for p, q in r.projects %}<li class="flex justify-between gap-3 border-b border-dashed border-slate-100 pb-1"><span>{{ p.name }} <span class="text-slate-400">· वडा {{ p.ward.name|to_nepali_number }}{% if p.fiscalyear %} · {{ p.fiscalyear.name|to_nepali_number }}{% endif %}</span></span><span class="font-medium whitespace-nowrap">{{ q|qty|to_nepali_number }} {{ r.ind.unit }}</span></li>{% endfor %}
               </ul>
             </details>
           </td>

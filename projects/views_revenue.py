@@ -33,6 +33,9 @@ UPLOAD_MAX = 10 * 1024 * 1024
 BID_ROWS = 5
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _user_wards(user):
     from usercommittee.views_workflow import _user_wards as uw
 
@@ -86,7 +89,7 @@ def _return_to(request):
 
 
 def _cards(s):
-    cards = [{"label": "प्रकार", "value": s.get_category_display(), "sub": f"आ.व. {s.fiscalyear.name}"}]
+    cards = [{"label": "प्रकार", "value": s.get_category_display(), "sub": f"आ.व. {npd(s.fiscalyear.name)}"}]
     if s.est_revenue:
         cards.append({"label": "अनुमानित राजस्व", "value": f"रु. {rv.money(s.est_revenue)}"})
         cards.append({"label": "न्यूनतम कबोल", "value": f"रु. {rv.money(s.min_bid)}", "brand": True})
@@ -234,7 +237,7 @@ def _source_form(request, s):
         if wards is not None and (ward is None or ward.id not in wards):
             errors.append("आफ्नो वडाको स्रोत मात्र दर्ता गर्न मिल्छ।")
         if fy and name and RevenueSource.objects.filter(fiscalyear=fy, name=name).exclude(id=s.id).exists():
-            errors.append(f"आ.व. {fy.name} मा “{name}” पहिले नै दर्ता छ।")
+            errors.append(f"आ.व. {npd(fy.name)} मा “{name}” पहिले नै दर्ता छ।")
         if not errors:
             s.name, s.category, s.fiscalyear, s.ward = name, category, fy, ward
             s.location = f.text("location", "स्थान", required=False)
@@ -1205,18 +1208,18 @@ def next_year(request, sid):
             errors.append("ठेक्का अवधि १ देखि ६० महिनासम्म।")
         name = (request.POST.get("name") or "").strip() or s.name
         if fy and RevenueSource.objects.filter(fiscalyear=fy, name=name).exists():
-            errors.append(f"आ.व. {fy.name} मा “{name}” पहिले नै छ — नाम फरक राख्नुहोस्।")
+            errors.append(f"आ.व. {npd(fy.name)} मा “{name}” पहिले नै छ — नाम फरक राख्नुहोस्।")
         if not errors:
             n = RevenueSource.objects.create(
                 fiscalyear=fy, name=name, category=s.category, ward=s.ward, location=s.location, boundary=s.boundary,
                 unit=s.unit, contract_months=int(months), previous=s, created_by=request.user,
-                description=(f"अघिल्लो: आ.व. {s.fiscalyear.name} — {s.selected.name if s.selected else ''} रु. "
+                description=(f"अघिल्लो: आ.व. {npd(s.fiscalyear.name)} — {s.selected.name if s.selected else ''} रु. "
                              f"{rv.money(s.contract_amount)}" + (f", रद्द {bs_date(s.cancelled_on)}" if s.cancelled_on else "")),
                 # सर्वेक्षण र वातावरणीय स्वीकृति म्याद बाँकी भए सारिन्छ (नयाँ सर्वेक्षण मिति भने चाहिन्छ)
                 **({k: getattr(s, k) for k in ("env_type", "env_ref", "env_approved_on", "env_valid_until", "permitted_area")}
                    if s.env_valid_until and s.env_valid_until > date.today() else {}))
             _log(request, n, "create", f"{'बाँकी अवधिको पुनः बोलपत्र' if remainder else 'अर्को आ.व.'} — #{s.id} बाट")
-            messages.success(request, f"आ.व. {fy.name} को “{n.name}” बनाइयो। सर्वेक्षण र मूल्याङ्कनबाट सुरु गर्नुहोस् "
+            messages.success(request, f"आ.व. {npd(fy.name)} को “{n.name}” बनाइयो। सर्वेक्षण र मूल्याङ्कनबाट सुरु गर्नुहोस् "
                                       f"(अघिल्लो सम्झौता रु. {rv.money(s.contract_amount)})।")
             return redirect(with_open(reverse("revenue_list"), n.id))
     p = request.POST if request.method == "POST" else {}

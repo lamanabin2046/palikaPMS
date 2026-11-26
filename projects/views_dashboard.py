@@ -13,6 +13,9 @@ from . import yearend as ye
 from .models import FiscalYear, YearEndLine
 
 
+from accounts.utils import npd  # नेपाली अङ्क
+
+
 def _user_wards(user):
     from usercommittee.views_workflow import _user_wards as uw
 
@@ -140,9 +143,9 @@ def yearend(request):
             counts = ye.close(fy, to_fy, decisions, request.user, ref)
             from usercommittee.models import ActivityLog
             ActivityLog.objects.create(user=request.user, action="update", model_name="आर्थिक वर्ष", object_id=fy.id,
-                                       object_repr=f"आ.व. {fy.name} बन्द", note=f"{ref} · क्रमागत {counts['carried']}, "
+                                       object_repr=f"आ.व. {npd(fy.name)} बन्द", note=f"{ref} · क्रमागत {counts['carried']}, "
                                                                                   f"रोक्का {counts['frozen']}, सम्पन्न {counts['completed']}")
-            messages.success(request, f"आ.व. {fy.name} बन्द भयो — {counts['carried']} योजना क्रमागत रूपमा "
+            messages.success(request, f"आ.व. {npd(fy.name)} बन्द भयो — {counts['carried']} योजना क्रमागत रूपमा "
                                       f"{to_fy.name if to_fy else ''} मा सारियो, {counts['frozen']} रोक्का, {counts['completed']} सम्पन्न।")
             return redirect("yearend_report", fy.id)
     p = request.POST if request.method == "POST" else {}
@@ -208,8 +211,8 @@ def yearend_reopen(request, fy_id):
     fy.save(update_fields=["closed_at", "close_ref"])
     from usercommittee.models import ActivityLog
     ActivityLog.objects.create(user=request.user, action="update", model_name="आर्थिक वर्ष", object_id=fy.id,
-                               object_repr=f"आ.व. {fy.name} लक खोलियो", note=reason[:250])
-    messages.warning(request, f"आ.व. {fy.name} को लक खोलियो — भुक्तानी फेरि गर्न सकिन्छ। सारिएका क्रमागत योजना नयाँ आ.व. मै रहन्छन्।")
+                               object_repr=f"आ.व. {npd(fy.name)} लक खोलियो", note=reason[:250])
+    messages.warning(request, f"आ.व. {npd(fy.name)} को लक खोलियो — भुक्तानी फेरि गर्न सकिन्छ। सारिएका क्रमागत योजना नयाँ आ.व. मै रहन्छन्।")
     return redirect("yearend_report", fy.id)
 
 
@@ -230,7 +233,7 @@ def audit_pack(request):
         wb.save(resp)
         from usercommittee.models import ActivityLog
         ActivityLog.objects.create(user=request.user, action="update", model_name="लेखापरीक्षण प्याकेट", object_id=fy.id,
-                                   object_repr=f"आ.व. {fy.name} डाउनलोड", note="")
+                                   object_repr=f"आ.व. {npd(fy.name)} डाउनलोड", note="")
         return resp
     from . import auditpack
     start, end = auditpack.fy_range(fy) if fy else (None, None)
