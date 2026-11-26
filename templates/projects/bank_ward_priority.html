@@ -18,7 +18,7 @@
   <div class="card p-4 flex flex-wrap items-center gap-4 {% if ceiling.over %}border-rose-200 bg-rose-50{% endif %}">
     <div class="flex-1 min-w-[16rem]">
       <div class="flex flex-wrap justify-between text-sm gap-2">
-        <span class="font-semibold text-slate-700">आ.व. {{ ceiling.wc.plan.years.0 }} को वडा सीमा <span class="font-normal text-xs text-slate-500">(स्रोत अनुमानबाट)</span></span>
+        <span class="font-semibold text-slate-700">आ.व. {{ ceiling.wc.plan.years.0|to_nepali_number }} को वडा सीमा <span class="font-normal text-xs text-slate-500">(स्रोत अनुमानबाट)</span></span>
         <span class="{% if ceiling.over %}text-rose-700 font-semibold{% else %}text-slate-600{% endif %}">प्रस्ताव लागत रु. {{ ceiling.used|money:0 }} / सीमा रु. {{ ceiling.wc.amount|money:0 }}</span>
       </div>
       {% if ceiling.wc.amount %}<div class="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden"><div class="h-2 rounded-full {% if ceiling.over %}bg-rose-600{% else %}bg-emerald-500{% endif %}" style="width:{{ ceiling.pct }}%"></div></div>
@@ -37,7 +37,7 @@
       {% for r in pending %}{% with b=r.b %}
       <tr>
         <td class="px-4 py-2.5">{% if can %}<input name="rank_{{ b.id }}" value="{{ r.rank }}" class="form-input text-center" style="width:4.5rem" inputmode="numeric">{% else %}{{ forloop.counter|to_nepali_number }}{% endif %}</td>
-        <td class="px-3 py-2.5"><p class="font-medium text-slate-800">{{ b.name }}</p><p class="text-xs text-slate-400">{{ b.code }} · {{ b.sector.name|default:"" }} · {{ b.get_nature_display }}{% if b.location %} · {{ b.location }}{% endif %}</p></td>
+        <td class="px-3 py-2.5"><p class="font-medium text-slate-800">{{ b.name }}</p><p class="text-xs text-slate-500">{{ b.code }} · {{ b.sector.name|default:"" }} · {{ b.get_nature_display }}{% if b.location %} · {{ b.location }}{% endif %}</p></td>
         <td class="px-3 py-2.5 text-right whitespace-nowrap">{{ b.proposed_cost|money:0 }}</td>
         <td class="px-3 py-2.5 text-right">{% if b.population %}{{ b.population|to_nepali_number }}{% else %}—{% endif %}</td>
         <td class="px-3 py-2.5 text-xs text-slate-500">{{ b.requested_by|default:b.get_source_display }}</td>
@@ -52,7 +52,7 @@
     <div class="px-5 py-3 border-b border-slate-100 font-semibold text-slate-700 text-sm">स्वीकृत भइसकेका</div>
     <table class="w-full text-sm"><tbody class="divide-y divide-slate-100">
       {% for b in done %}<tr class="hover:bg-slate-50"><td class="px-4 py-2 w-16 text-center font-semibold">{% if b.ward_rank %}{{ b.ward_rank|to_nepali_number }}{% else %}<span class="text-slate-300">—</span>{% endif %}</td>
-        <td class="px-3 py-2"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="font-medium text-brand-700 hover:underline">{{ b.name }}</a> <span class="text-xs text-slate-400">{{ b.code }}</span>{% if b.converted %} <span class="text-[11px] rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">पुरानो योजना</span>{% endif %}</td>
+        <td class="px-3 py-2"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="font-medium text-brand-700 hover:underline">{{ b.name }}</a> <span class="text-xs text-slate-500">{{ b.code }}</span>{% if b.converted %} <span class="text-[11px] rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">पुरानो योजना</span>{% endif %}</td>
         <td class="px-3 py-2 text-xs text-slate-500">{{ b.ward_approved_at|bs }} · {{ b.ward_approver }}</td>
         <td class="px-3 py-2 text-right"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="btn-chip-slate">खोल्नुहोस् →</a></td></tr>{% endfor %}
     </tbody></table>

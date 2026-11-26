@@ -4,7 +4,7 @@
 <div class="max-w-5xl mx-auto space-y-4">
 
   <div>
-    <h1 class="text-lg md:text-xl font-bold text-slate-800">Enter Bidding Prices</h1>
+    <h1 class="text-lg md:text-xl font-bold text-slate-800">बोलपत्र रकम प्रविष्ट गर्नुहोस्</h1>
     <p class="text-sm text-slate-500 mt-0.5">Project: <span class="font-semibold text-slate-700">{{ quatation.project.name }}</span></p>
   </div>
 
@@ -15,8 +15,8 @@
         <table class="w-full text-sm table-shell">
           <thead>
             <tr>
-              <th>Firm Name</th>
-              <th>Bidded Price (NRs.)</th>
+              <th>फर्मको नाम</th>
+              <th>कबोल रकम (रु.)</th>
             </tr>
           </thead>
           <tbody>
@@ -29,7 +29,7 @@
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="2" class="px-4 py-6 text-center text-slate-400">No firms available.</td></tr>
+            <tr><td colspan="2" class="px-4 py-6 text-center text-slate-400">फर्म छैन।</td></tr>
             {% endfor %}
           </tbody>
         </table>

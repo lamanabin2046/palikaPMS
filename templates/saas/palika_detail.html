@@ -7,9 +7,9 @@
 <div class="mt-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-5">
   <h2 class="font-bold text-amber-900">Login विवरण — अहिले मात्र देखिन्छ, सुरक्षित राख्नुहोस्</h2>
   <dl class="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
-    <div><dt class="text-amber-700">Site</dt><dd><a class="underline font-mono" target="_blank" href="{{ credentials.url }}">{{ credentials.url }}</a></dd></div>
+    <div><dt class="text-amber-700">स्थल</dt><dd><a class="underline font-mono" target="_blank" href="{{ credentials.url }}">{{ credentials.url }}</a></dd></div>
     <div><dt class="text-amber-700">मोबाइल (username)</dt><dd class="font-mono">{{ credentials.mobile }}</dd></div>
-    <div><dt class="text-amber-700">Password</dt><dd class="font-mono">{{ credentials.password }}</dd></div>
+    <div><dt class="text-amber-700">पासवर्ड</dt><dd class="font-mono">{{ credentials.password }}</dd></div>
   </dl>
 </div>
 {% endif %}
@@ -48,7 +48,7 @@
         <span>{{ a.first_name|default:"Admin" }} · <span class="font-mono">{{ a.mobile }}</span></span>
         <form method="post" action="{% url 'saas_admin_reset_password' palika.pk %}">{% csrf_token %}
           <input type="hidden" name="mobile" value="{{ a.mobile }}">
-          <button class="btn-light !py-1" onclick="return confirm('नयाँ password बनाउने?')">Password reset</button>
+          <button class="btn-light !py-1" onclick="return confirm('नयाँ password बनाउने?')">पासवर्ड रिसेट</button>
         </form>
       </div>
     {% empty %}<p class="text-sm text-slate-500">Admin छैन।</p>{% endfor %}

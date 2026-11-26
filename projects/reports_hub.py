@@ -74,7 +74,7 @@ SECTIONS = [
           perms=("bank.view", "bank.manage", "mtef.manage", "mtef.approve", "dashboard.view", "report.uc"), fy=False, star=True),
         R("PLAN-02", "SuTRA का लागि बजेट निर्यात", "बजेट उपशीर्षक र खर्च शीर्षकसहित Excel", "sutra_export", "file-spreadsheet",
           perms=("budget.view", "budget.manage", "mtef.manage", "report.uc"), fy=False),
-        R("PLAN-03", "लैङ्गिक, जलवायु र SDG बजेट", "कोडअनुसार पहिलो वर्षको रकम र प्रतिशत", "coding_report", "venus-mars",
+        R("PLAN-03", "लैङ्गिक, जलवायु र SDG बजेट", "कोडअनुसार पहिलो वर्षको रकम र प्रतिशत", "coding_report", "chart-pie",
           perms=("bank.view", "bank.manage", "mtef.manage", "mtef.approve", "dashboard.view", "report.uc"), fy=False),
         R("PLAN-04", "त्रैमासिक प्रगति र अनुगमन", "वित्तीय र भौतिक प्रगति, ढिलो योजना", "progress_report", "activity",
           perms=("bank.view", "bank.manage", "mtef.manage", "dashboard.view", "report.uc", "report.outputs", "field.view"), fy=False, star=True),

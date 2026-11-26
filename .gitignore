@@ -48,3 +48,6 @@ backups/
 
 # Claude working files
 Claude outputs/
+
+# Tailwind build tool
+tailwind/node_modules/

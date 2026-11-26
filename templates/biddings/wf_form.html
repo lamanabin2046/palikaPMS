@@ -97,7 +97,7 @@
               <input type="text" id="f-{{ fld.name }}" name="{{ fld.name }}" value="{{ fld.value }}" {{ fld.attrs|safe }}
                      class="form-input {% if fld.readonly %}bg-slate-50 font-semibold text-brand-700{% endif %}" {% if fld.readonly %}readonly tabindex="-1"{% endif %} {% if fld.required %}required{% endif %}>
               {% endif %}
-              {% if fld.hint and fld.kind != 'checkbox' %}<p class="text-[11px] text-slate-400 mt-1">{{ fld.hint }}</p>{% endif %}
+              {% if fld.hint and fld.kind != 'checkbox' %}<p class="text-xs text-slate-500 mt-1">{{ fld.hint }}</p>{% endif %}
             </div>
             {% endfor %}
           </div>

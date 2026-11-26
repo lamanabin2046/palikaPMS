@@ -1,0 +1,9 @@
+{
+  "name": "palika-pms-css",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -c tailwind.config.js -i input.css -o ../static/css/app.css --minify",
+    "watch": "tailwindcss -c tailwind.config.js -i input.css -o ../static/css/app.css --watch"
+  },
+  "devDependencies": { "tailwindcss": "3.4.17" }
+}

@@ -4,8 +4,8 @@
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-4">
   <div class="flex flex-wrap items-end justify-between gap-3">
-    <div><p class="text-xs font-medium text-brand-700"><a href="{% url 'mtef_plan' plan.id %}"><i class="fas fa-layer-group"></i> MTEF {{ plan }}</a></p>
-      <h1 class="text-xl font-bold text-slate-800">आ.व. {{ plan.start_fy.name }} को वार्षिक बजेटमा पठाउने</h1>
+    <div><p class="text-xs font-medium text-brand-700"><a href="{% url 'mtef_plan' plan.id %}"><i class="fas fa-layer-group"></i> MTEF {{ plan|to_nepali_number }}</a></p>
+      <h1 class="text-xl font-bold text-slate-800">आ.व. {{ plan.start_fy.name|to_nepali_number }} को वार्षिक बजेटमा पठाउने</h1>
       <p class="text-sm text-slate-500">पहिलो वर्षको रकम — नयाँ {{ counts.create|to_nepali_number }} योजना बन्छन्, {{ counts.update|to_nepali_number }} को बजेट अद्यावधिक, {{ counts.same|to_nepali_number }} उस्तै · जम्मा रु. {{ total|money:0 }}</p></div>
     <a href="{% url 'mtef_plan' plan.id %}" class="btn-secondary"><i class="fas fa-arrow-left"></i> MTEF</a>
   </div>

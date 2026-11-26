@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load nepali_date outputs %}
-{% block title %}वार्षिक कार्यक्रम पुस्तिका — आ.व. {{ plan.years.0 }}{% endblock %}
+{% block title %}वार्षिक कार्यक्रम पुस्तिका — आ.व. {{ plan.years.0|to_nepali_number }}{% endblock %}
 {% block content %}
 <style>
   .book table { border-collapse: collapse; width: 100%; }
@@ -20,11 +20,11 @@
   <div class="no-print flex flex-wrap items-end justify-between gap-3">
     <div>
       <h1 class="text-2xl font-bold text-slate-800">वार्षिक कार्यक्रम पुस्तिका</h1>
-      <p class="text-sm text-slate-500">MTEF को पहिलो वर्ष (आ.व. {{ plan.years.0 }}) का आयोजना — वडागत र विषयगत। सभामा लैजाने / छाप्ने ढाँचा।</p>
+      <p class="text-sm text-slate-500">MTEF को पहिलो वर्ष (आ.व. {{ plan.years.0|to_nepali_number }}) का आयोजना — वडागत र विषयगत। सभामा लैजाने / छाप्ने ढाँचा।</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <form method="get"><select name="plan" class="form-select !w-auto" onchange="this.form.submit()" aria-label="MTEF">
-        {% for p in plans %}<option value="{{ p.id }}" {% if p.id == plan.id %}selected{% endif %}>आ.व. {{ p.years.0 }} ({{ p.get_status_display }})</option>{% endfor %}
+        {% for p in plans %}<option value="{{ p.id }}" {% if p.id == plan.id %}selected{% endif %}>आ.व. {{ p.years.0|to_nepali_number }} ({{ p.get_status_display }})</option>{% endfor %}
       </select></form>
       <button type="button" onclick="window.print()" class="btn-primary"><i class="fas fa-print"></i> छाप्नुहोस् / PDF</button>
     </div>
@@ -96,7 +96,7 @@
         </tbody>
       </table>
     </section>
-    <p class="text-[11px] text-slate-500">MTEF {{ plan }} बाट तयार · {% now "Y-m-d" %} मा छापिएको</p>
+    <p class="text-[11px] text-slate-500">MTEF {{ plan|to_nepali_number }} बाट तयार · {% now "Y-m-d" %} मा छापिएको</p>
   </div></div>
 </div>
 {% endblock %}

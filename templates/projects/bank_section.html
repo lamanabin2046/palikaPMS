@@ -22,7 +22,7 @@
   <section class="card p-5" aria-labelledby="ceil-h">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p class="text-xs text-slate-500">{% if plan %}<span class="inline-flex items-center rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 font-semibold text-brand-700"><i class="far fa-calendar mr-1"></i>आ.व. {{ plan.years.0 }} को बजेट सीमा</span> <span class="ml-1">MTEF {{ plan }}</span>{% else %}MTEF बनेको छैन{% endif %}</p>
+        <p class="text-xs text-slate-500">{% if plan %}<span class="inline-flex items-center rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 font-semibold text-brand-700"><i class="far fa-calendar mr-1"></i>आ.व. {{ plan.years.0|to_nepali_number }} को बजेट सीमा</span> <span class="ml-1">MTEF {{ plan|to_nepali_number }}</span>{% else %}MTEF बनेको छैन{% endif %}</p>
         <h2 id="ceil-h" class="text-lg font-bold text-slate-800">{{ sector.name }}{% if sc.note %} <span class="text-sm font-normal text-slate-500">· {{ sc.note }}</span>{% endif %}</h2>
       </div>
       {% if sc.submitted_at %}<span class="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"><i class="fas fa-lock"></i> सूची पेश भयो · {{ sc.submitted_at|date:"Y-m-d" }}</span>
@@ -30,7 +30,7 @@
       {% else %}<span class="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-700">पेश गर्न बाँकी</span>{% endif %}
     </div>
     <div class="grid gap-3 mt-4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-      <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">आ.व. {% if plan %}{{ plan.years.0 }}{% endif %} को शाखा सीमा</p><p class="text-xl font-bold text-slate-800">{% if sc and sc.amount %}रु. {{ sc.amount|money:0 }}{% else %}<span class="text-base text-slate-400">तोकिएको छैन</span>{% endif %}</p></div>
+      <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">आ.व. {% if plan %}{{ plan.years.0|to_nepali_number }}{% endif %} को शाखा सीमा</p><p class="text-xl font-bold text-slate-800">{% if sc and sc.amount %}रु. {{ sc.amount|money:0 }}{% else %}<span class="text-base text-slate-400">तोकिएको छैन</span>{% endif %}</p></div>
       <div class="rounded-xl border p-3 {% if over %}border-rose-200 bg-rose-50{% else %}border-slate-200{% endif %}"><p class="text-xs text-slate-500">प्रस्तावको जम्मा लागत</p><p class="text-xl font-bold {% if over %}text-rose-700{% else %}text-slate-800{% endif %}">रु. {{ used|money:0 }}</p></div>
       <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs text-slate-500">बाँकी</p><p class="text-xl font-bold {% if left < 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">{% if sc and sc.amount %}रु. {{ left|money:0 }}{% else %}—{% endif %}</p></div>
     </div>
@@ -59,7 +59,7 @@
           <td class="px-2 py-2"><p class="font-medium text-slate-800">{{ b.name }}</p>
             <p class="text-[11px] text-slate-500">{% if b.subsector %}{{ b.subsector.name }}{% endif %}{% if b.ward %} · वडा {{ b.ward.name|to_nepali_number }}{% endif %}{% if b.duration_years > 1 %} · {{ b.duration_years|to_nepali_number }} वर्ष{% endif %}</p>
             {% if b.entry_step %}<span class="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] text-orange-700"><i class="fas fa-clock-rotate-left mr-1"></i>चरण {{ b.entry_step|to_nepali_number }} मा थपिएको</span>{% endif %}</td>
-          <td class="px-2 py-2 text-right">{{ b.cost|money:0 }}{% if b.tech_cost %}<span class="block text-[10px] text-slate-400">इन्जिनियर अनुमान</span>{% endif %}</td>
+          <td class="px-2 py-2 text-right">{{ b.cost|money:0 }}{% if b.tech_cost %}<span class="block text-[11px] text-slate-500">इन्जिनियर अनुमान</span>{% endif %}</td>
           <td class="px-2 py-2 text-xs">{% if b.ready_at %}<span class="text-emerald-700">तयार</span>{% elif b.scored_at %}<span class="text-brand-700">अङ्क दिइएको</span>{% elif b.tech_at %}<span class="text-brand-700">प्राविधिक जाँच भयो</span>{% else %}<span class="text-slate-500">प्रस्तावित</span>{% endif %}</td>
           <td class="px-2 py-2 text-right"><a href="{% url 'bank_list' %}?open={{ b.id }}" class="text-xs text-brand-700">हेर्ने</a></td>
         </tr>

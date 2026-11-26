@@ -11,7 +11,7 @@
   {% if can %}
   <form method="post" class="card p-4 flex flex-wrap items-end gap-3">{% csrf_token %}
     <div><label class="form-label">पहिलो वर्ष (आ.व.)</label>
-      <select name="start_fy" class="form-select !w-auto"><option value="">— छान्नुहोस् —</option>{% for f in fys %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}</select></div>
+      <select name="start_fy" class="form-select !w-auto"><option value="">— छान्नुहोस् —</option>{% for f in fys %}<option value="{{ f.id }}">{{ f.name|to_nepali_number }}</option>{% endfor %}</select></div>
     <span class="text-sm text-slate-400 pb-2">वा</span>
     <div><label class="form-label">नयाँ आ.व.</label><input name="new_fy" class="form-input" style="width:9rem" placeholder="{{ suggest|default:'२०८४/८५' }}"></div>
     <button class="btn-primary"><i class="fas fa-plus"></i> नयाँ MTEF बनाउनुहोस्</button>

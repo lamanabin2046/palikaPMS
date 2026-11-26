@@ -10,7 +10,7 @@
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">
-        {% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name }}</option>{% endfor %}
+        {% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name|to_nepali_number }}</option>{% endfor %}
       </select></form>
       <a href="?fiscalyear={{ fy.id }}&export=xlsx" class="btn-primary" hx-boost="false"><i class="fas fa-file-excel"></i> Excel डाउनलोड</a>
     </div>

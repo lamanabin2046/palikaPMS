@@ -10,7 +10,7 @@
   </div>
   <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4 slim-scroll-light">
     {% if in_mtef %}<div class="rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm">यो आयोजना MTEF मा परिसकेको छ — निर्णय बदल्न पहिले MTEF बाट हटाउनुहोस्।</div>{% endif %}
-    {% if problems %}<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 space-y-0.5">{% for p in problems %}<p class="text-sm text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p }}</p>{% endfor %}<p class="text-xs text-rose-600 pt-1">यी नमिलेसम्म “तयार” गर्न मिल्दैन (स्थगित / अस्वीकृत गर्न मिल्छ)।</p></div>{% endif %}
+    {% if problems %}<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 space-y-0.5">{% for p in problems %}<p class="text-sm text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p|to_nepali_number }}</p>{% endfor %}<p class="text-xs text-rose-600 pt-1">यी नमिलेसम्म “तयार” गर्न मिल्दैन (स्थगित / अस्वीकृत गर्न मिल्छ)।</p></div>{% endif %}
     {% if warnings %}<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"><i class="fas fa-triangle-exclamation"></i> तयारी अधुरो: {{ warnings|join:", " }}</div>{% endif %}
     {% if not in_mtef %}
     <form id="bank-decide" hx-post="{% url 'bank_decide' b.id %}" hx-target="#bank-decide-msg" hx-swap="innerHTML" class="space-y-3">

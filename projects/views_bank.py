@@ -470,7 +470,7 @@ def _proposal_form(request, b):
         F("marginalized", "मध्ये दलित / सीमान्तकृत", v("marginalized", b.marginalized or ""), required=False),
     ]
     s3 = [
-        F("proposed_cost", "प्रस्तावित लागत (रु.)", v("proposed_cost", plain(b.proposed_cost) if b.proposed_cost else "")),
+        F("proposed_cost", "प्रस्तावित लागत (रु.)", v("proposed_cost", plain(b.proposed_cost) if b.proposed_cost else ""), attrs='data-money inputmode="numeric"'),
         F("duration_years", "कार्यान्वयन अवधि (वर्ष)", v("duration_years", b.duration_years or 1), hint="१ देखि ५"),
         F("cost_share_pct", "जनसहभागिता (%)", v("cost_share_pct", plain(b.cost_share_pct) if b.cost_share_pct else ""), required=False),
         F("doc_decision", "माग / निर्णय (फाइल)", kind="file", required=False),
@@ -627,7 +627,7 @@ def technical(request, bid):
         else:
             fields.append(F(k, lbl, (k in p) if p else getattr(b, k), kind="checkbox", required=False, hint=lbl))
     fields += [
-        F("tech_cost", "इन्जिनियरको लागत अनुमान (रु.)", p.get("tech_cost", plain(b.tech_cost) if b.tech_cost else plain(b.proposed_cost)),
+        F("tech_cost", "इन्जिनियरको लागत अनुमान (रु.)", p.get("tech_cost", plain(b.tech_cost) if b.tech_cost else plain(b.proposed_cost)), attrs='data-money inputmode="numeric"',
           hint=f"प्रस्तावित: रु. {bk.money(b.proposed_cost)}"),
         F("doc_dpr", "DPR / लागत अनुमान (फाइल)", kind="file", required=False, hint="ऐच्छिक"),
         F("doc_iee", "IEE / वातावरणीय अध्ययन (फाइल)", kind="file", required=False, hint="ऐच्छिक"),

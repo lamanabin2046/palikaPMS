@@ -20,8 +20,8 @@
     <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="ward_priority" value="1" class="mt-0.5" {% if S.ward_priority %}checked{% endif %}>
       <span><b>वडा प्राथमिकता चरण</b><span class="block text-xs text-slate-500">वडा अध्यक्षले वडाका प्रस्तावको क्रम तोकेपछि मात्र प्राविधिक जाँच। हटाए प्रस्ताव सिधै जाँचमा जान्छ।</span></span></label>
     <div class="grid sm:grid-cols-3 gap-3">
-      <div><label class="form-label">बैंक नम्बरको अगाडि</label><input name="prefix" value="{{ S.prefix }}" class="form-input"><p class="text-[11px] text-slate-400 mt-1">जस्तै PB-२०८३-०००१</p></div>
-      <div><label class="form-label">तयार घोषणा गर्न न्यूनतम अङ्क</label><input name="min_ready_score" value="{{ S.min_ready_score }}" class="form-input" inputmode="numeric"><p class="text-[11px] text-slate-400 mt-1">० = सीमा छैन</p></div>
+      <div><label class="form-label">बैंक नम्बरको अगाडि</label><input name="prefix" value="{{ S.prefix }}" class="form-input"><p class="text-xs text-slate-500 mt-1">जस्तै PB-२०८३-०००१</p></div>
+      <div><label class="form-label">तयार घोषणा गर्न न्यूनतम अङ्क</label><input name="min_ready_score" value="{{ S.min_ready_score }}" class="form-input" inputmode="numeric"><p class="text-xs text-slate-500 mt-1">० = सीमा छैन</p></div>
     </div>
     <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
   </form>
@@ -35,7 +35,7 @@
         <td class="py-1 text-center"><input type="checkbox" name="cr_active_{{ c.id }}" value="1" {% if c.is_active %}checked{% endif %}></td></tr>{% endfor %}
       <tr><td class="py-1 pr-2"><input name="new_criterion" class="form-input" placeholder="+ नयाँ आधार"></td><td class="py-1 pr-2"><input name="new_weight" class="form-input" placeholder="१०"></td><td></td><td></td></tr>
     </tbody></table>
-    <p class="text-[11px] text-slate-400">“आफैँ सुझाव” भएका आधारमा प्रस्ताव र प्राविधिक जाँचबाट अङ्क सुझाइन्छ (योजना शाखाले बदल्न सक्छ)।</p>
+    <p class="text-xs text-slate-500">“आफैँ सुझाव” भएका आधारमा प्रस्ताव र प्राविधिक जाँचबाट अङ्क सुझाइन्छ (योजना शाखाले बदल्न सक्छ)।</p>
     <button class="btn-primary">सुरक्षित गर्नुहोस्</button>
   </form>
 

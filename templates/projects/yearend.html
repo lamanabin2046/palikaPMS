@@ -5,7 +5,7 @@
 <div class="space-y-4">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-lock text-brand-600"></i> आ.व. {{ fy.name }} बन्द</h1>
+      <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-lock text-brand-600"></i> आ.व. {{ fy.name|to_nepali_number }} बन्द</h1>
       <p class="text-sm text-slate-500 mt-0.5">हरेक योजनाको निर्णय: <b>बहुवर्षीय</b> योजना मात्र <b>क्रमागत</b> (इतिहाससहित अर्को आ.व. मा सर्ने); एक वर्षे अधुरा योजना <b>रोक्का</b> (बजेट फ्रिज, हेर्न मात्र); सम्पन्न त्यहीँ रहने। बन्दपछि नयाँ आ.व. चालु आ.व. हुन्छ।</p>
     </div>
     <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()">{% for x in fiscal_years %}{% if not x.closed_at %}<option value="{{ x.id }}" {% if x.id == fy.id %}selected{% endif %}>आ.व. {{ x.name }}</option>{% endif %}{% endfor %}</select></form>
@@ -57,8 +57,8 @@
         <p>• <b>रोक्का:</b> योजना यसै आ.व. मा रहन्छ; आ.व. बन्द भएपछि भुक्तानी र बजेट परिवर्तन हुँदैन (बजेट फ्रिज)।</p>
         <p>• धरौटी फिर्ता र राजस्व असुली बन्द भएको आ.व. मा पनि चलिरहन्छ। बन्द प्रतिवेदन (स्न्यापसट) सधैँ उस्तै रहन्छ।</p>
       </div>
-      <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="confirm" value="1" class="mt-1"> <span>आ.व. {{ fy.name }} बन्द भएपछि यस आ.व. मा रहेका योजनामा भुक्तानी वा बजेट परिवर्तन गर्न मिल्दैन भन्ने बुझेँ।</span></label>
-      <div class="flex justify-end"><button class="btn-primary" onclick="return confirm('आ.व. {{ fy.name }} बन्द गर्ने?')"><i class="fas fa-lock"></i> आ.व. बन्द गर्नुहोस्</button></div>
+      <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="confirm" value="1" class="mt-1"> <span>आ.व. {{ fy.name|to_nepali_number }} बन्द भएपछि यस आ.व. मा रहेका योजनामा भुक्तानी वा बजेट परिवर्तन गर्न मिल्दैन भन्ने बुझेँ।</span></label>
+      <div class="flex justify-end"><button class="btn-primary" onclick="return confirm('आ.व. {{ fy.name|to_nepali_number }} बन्द गर्ने?')"><i class="fas fa-lock"></i> आ.व. बन्द गर्नुहोस्</button></div>
     </div>
   </form>
 </div>

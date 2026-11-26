@@ -71,7 +71,7 @@
         hx-post="{% if mode == 'approval' %}{% url 'revenue_approve' s.id %}{% else %}{% url 'revenue_award' s.id %}{% endif %}"
         hx-include="[form=rev-approve]" hx-target="#approve-msg" hx-swap="innerHTML">
     {% csrf_token %}
-    {% if problems %}<div class="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 space-y-0.5">{% for p in problems %}<p class="text-xs text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p }}</p>{% endfor %}</div>{% endif %}
+    {% if problems %}<div class="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 space-y-0.5">{% for p in problems %}<p class="text-xs text-rose-700"><i class="fas fa-circle-exclamation"></i> {{ p|to_nepali_number }}</p>{% endfor %}</div>{% endif %}
     <div id="approve-msg"></div>
     {% if mode == 'approval' %}<input name="approval_ref" class="form-input" placeholder="निर्णय नं. / मिति (ऐच्छिक)">{% endif %}
     <textarea name="remarks" rows="2" class="form-textarea" placeholder="{% if mode == 'approval' %}कैफियत — फिर्ता पठाउँदा कारण अनिवार्य{% else %}कैफियत — उच्चतम मान्यबाहेक अर्को छान्दा कारण अनिवार्य{% endif %}"></textarea>

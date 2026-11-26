@@ -7,7 +7,7 @@
     <button type="button" onclick="closeAppModal()" class="w-9 h-9 shrink-0 rounded-lg text-slate-500 hover:bg-slate-100"><i class="fas fa-xmark text-lg"></i></button>
   </div>
   <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-    {% if problems %}<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-1">{% for p in problems %}<p class="text-sm text-amber-800"><i class="fas fa-triangle-exclamation"></i> {{ p }}</p>{% endfor %}
+    {% if problems %}<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-1">{% for p in problems %}<p class="text-sm text-amber-800"><i class="fas fa-triangle-exclamation"></i> {{ p|to_nepali_number }}</p>{% endfor %}
       {% if can_create %}<a href="{% url 'mtef_list' %}" class="btn-chip-brand mt-2 inline-flex"><i class="fas fa-plus"></i> MTEF बनाउने पेज</a>{% endif %}</div>
     {% else %}
     <form id="b2m" hx-post="{% url 'bank_to_mtef' b.id %}" hx-target="#b2m-msg" class="space-y-3">{% csrf_token %}

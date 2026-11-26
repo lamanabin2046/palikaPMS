@@ -3,20 +3,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login · Project Management System</title>
+  <title>लगइन · योजना व्यवस्थापन प्रणाली</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: { extend: { fontFamily: { sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'] },
-        colors: { brand: { 50:'#eef4ff',100:'#dbe7fe',200:'#bfd6fe',300:'#93bbfd',400:'#6098fa',
-                             500:'#3b76f6',600:'#2856eb',700:'#2143d8',800:'#2138af',900:'#1f358a' } } } }
-    };
-  </script>
-  <link rel="stylesheet" href="{% static 'assets/plugins/fontawesome/css/all.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20261126">
+  <link rel="stylesheet" href="{% static 'assets/plugins/fontawesome6/css/all.min.css' %}">
 
   <style>
     html, body { font-family: 'Inter', 'Noto Sans Devanagari', sans-serif; }
@@ -37,7 +30,7 @@
            class="w-16 h-16 mx-auto mb-4 drop-shadow">
 
       <h1 class="text-xl font-bold text-slate-800 text-center">{{ palika.full_name }}</h1>
-      <p class="text-sm text-slate-500 text-center mt-1 mb-6">Project Management System</p>
+      <p class="text-sm text-slate-500 text-center mt-1 mb-6">योजना व्यवस्थापन प्रणाली</p>
 
       <div id="div_error"></div>
       {% include 'accounts/_auth_messages.html' %}
@@ -49,7 +42,7 @@
         <div class="login_result"></div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Mobile Number</label>
+          <label class="block text-xs font-medium text-slate-500 mb-1">मोबाइल नम्बर</label>
           <div class="relative">
             <i class="fas fa-mobile-screen absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3.5 py-2.5 text-sm
@@ -59,7 +52,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Password</label>
+          <label class="block text-xs font-medium text-slate-500 mb-1">पासवर्ड</label>
           <div class="relative">
             <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3.5 py-2.5 text-sm
@@ -78,7 +71,7 @@
 
         <button type="submit" id="login"
                 class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl py-3 shadow-lg shadow-brand-600/20 transition">
-          Login <i class="fas fa-arrow-right ml-1"></i>
+          लगइन <i class="fas fa-arrow-right ml-1"></i>
         </button>
       </form>
 

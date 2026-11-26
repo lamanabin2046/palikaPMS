@@ -288,7 +288,8 @@ def manage_staff(request):
         return redirect("unauthorized")
 
     users = CustomUser.objects.exclude(pk=request.user.pk).order_by("-is_active", "user_type", "mobile")
-    role_label_map = dict(CustomUser.USER_CHOICES)
+    from .permissions import ROLE_LABEL
+    role_label_map = {int(k): v for k, v in ROLE_LABEL.items()}
 
     staff_rows = []
     for user in users:

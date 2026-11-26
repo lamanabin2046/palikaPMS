@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load nepali_date outputs %}
-{% block title %}त्रैमासिक प्रगति — आ.व. {{ fy.name }}{% endblock %}
+{% block title %}त्रैमासिक प्रगति — आ.व. {{ fy.name|to_nepali_number }}{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-4">
   <div class="flex flex-wrap items-end justify-between gap-3">
@@ -9,7 +9,7 @@
       <p class="text-sm text-slate-500">वित्तीय प्रगति (भुक्तानी ÷ विनियोजन) र भौतिक प्रगति (साइट फोटोमा राखिएको %) लाई समयअनुसार अपेक्षित प्रगतिसँग दाँजेर ढिलो योजना देखाउँछ।</p>
     </div>
     <form method="get" class="no-print flex flex-wrap items-center gap-2">
-      <select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">{% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name }}</option>{% endfor %}</select>
+      <select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">{% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name|to_nepali_number }}</option>{% endfor %}</select>
       <select name="ward" class="form-select !w-auto" onchange="this.form.submit()" aria-label="वडा"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if wsel == w.id|stringformat:"d" %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}</select>
       <label class="flex items-center gap-1 text-sm text-slate-600"><input type="checkbox" name="lag" value="1" {% if only_lag %}checked{% endif %} onchange="this.form.submit()"> ढिलो मात्र</label>
       <button type="button" onclick="window.print()" class="btn-secondary"><i class="fas fa-print"></i> छाप्नुहोस्</button>
@@ -57,7 +57,7 @@
         <td class="px-2 py-1.5 text-xs">{{ r.status_label }}</td>
         <td class="px-2 py-1.5 text-right">{{ r.alloc|money:0 }}</td>
         <td class="px-2 py-1.5"><div class="flex items-center gap-2"><div class="h-1.5 flex-1 rounded bg-slate-100"><div class="h-1.5 rounded bg-brand-500" style="width:{% if r.fin > 100 %}100{% else %}{{ r.fin }}{% endif %}%"></div></div><span class="w-10 text-right text-xs">{{ r.fin|to_nepali_number }}%</span></div></td>
-        <td class="px-2 py-1.5">{% if r.phys is not None %}<div class="flex items-center gap-2"><div class="h-1.5 flex-1 rounded bg-slate-100"><div class="h-1.5 rounded {% if r.lag %}bg-rose-500{% else %}bg-emerald-500{% endif %}" style="width:{{ r.phys }}%"></div></div><span class="w-10 text-right text-xs">{{ r.phys|to_nepali_number }}%</span></div>{% else %}<span class="text-xs text-slate-400">फोटो / % छैन</span>{% endif %}</td>
+        <td class="px-2 py-1.5">{% if r.phys is not None %}<div class="flex items-center gap-2"><div class="h-1.5 flex-1 rounded bg-slate-100"><div class="h-1.5 rounded {% if r.lag %}bg-rose-500{% else %}bg-emerald-500{% endif %}" style="width:{{ r.phys }}%"></div></div><span class="w-10 text-right text-xs">{{ r.phys|to_nepali_number }}%</span></div>{% else %}<span class="text-xs text-slate-500">फोटो / % छैन</span>{% endif %}</td>
         <td class="px-2 py-1.5 text-right">{% if r.lag %}<span class="text-xs rounded-full bg-rose-100 px-2 py-0.5 text-rose-700">ढिलो</span>{% endif %}</td>
       </tr>{% empty %}<tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">{% if only_lag %}ढिलो योजना छैन।{% else %}योजना छैन।{% endif %}</td></tr>{% endfor %}
       </tbody>

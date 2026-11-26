@@ -3,20 +3,20 @@
 {% block content %}
 <div class="space-y-4">
 
-  <h1 class="text-lg md:text-xl font-bold text-slate-800">Quotation Details</h1>
+  <h1 class="text-lg md:text-xl font-bold text-slate-800">दरभाउपत्र विवरण</h1>
 
   <div class="card">
     <div class="overflow-x-auto">
       <table class="w-full text-sm table-shell" data-table="true">
         <thead>
           <tr>
-            <th>S.N.</th>
-            <th>Project Name</th>
-            <th>Budget</th>
-            <th>Cost Estimate</th>
-            <th>Contingency</th>
-            <th>Firm Name</th>
-            <th>Action</th>
+            <th>क्र.सं.</th>
+            <th>योजनाको नाम</th>
+            <th>बजेट</th>
+            <th>लागत अनुमान</th>
+            <th>कन्टिन्जेन्सी</th>
+            <th>फर्मको नाम</th>
+            <th>कार्य</th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +41,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="7" class="text-center text-slate-400 py-6">No quotations available.</td></tr>
+          <tr><td colspan="7" class="text-center text-slate-400 py-6">दरभाउपत्र छैन।</td></tr>
           {% endfor %}
         </tbody>
       </table>
