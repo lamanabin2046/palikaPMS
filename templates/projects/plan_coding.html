@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}लैङ्गिक, जलवायु र SDG बजेट — आ.व. {{ plan.years.0 }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">लैङ्गिक, जलवायु र SDG बजेट</h1>
+      <p class="text-sm text-slate-500">आ.व. {{ plan.years.0 }} को पहिलो वर्षको रकम (MTEF) — आयोजना बैंकमा दिइएका कोडअनुसार।</p>
+    </div>
+    <div class="no-print flex flex-wrap items-center gap-2">
+      <form method="get"><select name="plan" class="form-select !w-auto" onchange="this.form.submit()" aria-label="MTEF">
+        {% for p in plans %}<option value="{{ p.id }}" {% if p.id == plan.id %}selected{% endif %}>आ.व. {{ p.years.0 }} ({{ p.get_status_display }})</option>{% endfor %}
+      </select></form>
+      <button type="button" onclick="window.print()" class="btn-secondary"><i class="fas fa-print"></i> छाप्नुहोस्</button>
+    </div>
+  </div>
+
+  <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="card p-4"><p class="text-xs text-slate-500">पहिलो वर्षको रकम</p><p class="text-xl font-bold text-slate-800">रु. {{ total|money:0 }}</p><p class="text-xs text-slate-500">{{ n|to_nepali_number }} आयोजना</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">लैङ्गिक — प्रत्यक्ष लाभ</p><p class="text-xl font-bold text-fuchsia-700">{{ gender_pct|to_nepali_number }}%</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">जलवायु सान्दर्भिक (अत्यधिक + सान्दर्भिक)</p><p class="text-xl font-bold text-emerald-700">{{ climate_pct|to_nepali_number }}%</p></div>
+    <div class="card p-4 {% if uncoded %}border-amber-200 bg-amber-50{% endif %}"><p class="text-xs text-slate-500">कोड अधुरा आयोजना</p><p class="text-xl font-bold {% if uncoded %}text-amber-700{% else %}text-emerald-700{% endif %}">{{ uncoded|to_nepali_number }}</p></div>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    {% for sec in sections %}
+    <section class="card overflow-hidden {% if sec.rows|length > 8 %}md:col-span-2{% endif %}">
+      <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">{{ sec.title }}</h2></div>
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">कोड</th><th class="px-2 py-2 text-right font-medium">आयोजना</th>
+          <th class="px-2 py-2 text-right font-medium">रकम (रु.)</th><th class="px-3 py-2 font-medium" style="width:38%">हिस्सा</th></tr></thead>
+        <tbody class="divide-y divide-slate-100">
+        {% for r in sec.rows %}<tr>
+          <td class="px-4 py-1.5 {% if r.label == 'कोड नदिइएको' %}text-amber-700{% else %}text-slate-700{% endif %}">{{ r.label }}</td>
+          <td class="px-2 py-1.5 text-right">{{ r.n|to_nepali_number }}</td>
+          <td class="px-2 py-1.5 text-right">{{ r.amt|money:0 }}</td>
+          <td class="px-3 py-1.5"><div class="flex items-center gap-2"><div class="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden"><div class="h-2 rounded-full {% if r.label == 'कोड नदिइएको' %}bg-amber-400{% else %}bg-brand-500{% endif %}" style="width:{{ r.pct }}%"></div></div><span class="w-12 text-right text-xs text-slate-600">{{ r.pct|to_nepali_number }}%</span></div></td>
+        </tr>{% empty %}<tr><td colspan="4" class="px-4 py-4 text-center text-slate-500">MTEF मा पहिलो वर्षको रकम भएको आयोजना छैन।</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endfor %}
+  </div>
+  <p class="text-xs text-slate-500">कोड आयोजना बैंकको “अङ्क र कोड” चरणमा दिइन्छ। “कोड नदिइएको” भएका आयोजनामा कोड दिएपछि यो प्रतिवेदन आफैँ मिल्छ।</p>
+</div>
+{% endblock %}

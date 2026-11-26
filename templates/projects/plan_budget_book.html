@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}वार्षिक कार्यक्रम पुस्तिका — आ.व. {{ plan.years.0 }}{% endblock %}
+{% block content %}
+<style>
+  .book table { border-collapse: collapse; width: 100%; }
+  .book th, .book td { border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 12.5px; vertical-align: top; }
+  .book th { background: #f1f5f9; font-weight: 600; text-align: left; }
+  .book .num { text-align: right; white-space: nowrap; }
+  .book .grp td { background: #eef2fb; font-weight: 600; }
+  .book .sub td { background: #f8fafc; font-weight: 600; }
+  @media print {
+    .book { font-size: 11px; min-width: 0 !important; }
+    .book section { break-inside: avoid-page; }
+    .book .pb { break-before: page; }
+    @page { size: A4; margin: 12mm; }
+  }
+</style>
+<div class="max-w-5xl mx-auto space-y-4">
+  <div class="no-print flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">वार्षिक कार्यक्रम पुस्तिका</h1>
+      <p class="text-sm text-slate-500">MTEF को पहिलो वर्ष (आ.व. {{ plan.years.0 }}) का आयोजना — वडागत र विषयगत। सभामा लैजाने / छाप्ने ढाँचा।</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <form method="get"><select name="plan" class="form-select !w-auto" onchange="this.form.submit()" aria-label="MTEF">
+        {% for p in plans %}<option value="{{ p.id }}" {% if p.id == plan.id %}selected{% endif %}>आ.व. {{ p.years.0 }} ({{ p.get_status_display }})</option>{% endfor %}
+      </select></form>
+      <button type="button" onclick="window.print()" class="btn-primary"><i class="fas fa-print"></i> छाप्नुहोस् / PDF</button>
+    </div>
+  </div>
+  {% if plan.status != 'approved' %}<div class="no-print rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800"><i class="fas fa-circle-info"></i> यो MTEF “{{ plan.get_status_display }}” अवस्थामा छ — छापिने पुस्तिकामा “मस्यौदा” लेखिन्छ।</div>{% endif %}
+
+  <div class="overflow-x-auto"><div class="book card p-6 space-y-5 bg-white" style="min-width:640px">
+    <header class="text-center space-y-1">
+      {% if palika.logo %}<img src="{{ palika.logo.url }}" alt="" class="mx-auto h-14">{% endif %}
+      <p class="text-lg font-bold text-slate-900">{{ palika.full_name|default:palika.name }}</p>
+      <p class="text-sm text-slate-600">{{ palika.office_name|default:"" }}{% if palika.district %}, {{ palika.district }}{% endif %}</p>
+      <p class="text-base font-semibold text-slate-800 mt-2">आर्थिक वर्ष {{ plan.years.0|to_nepali_number }} को वार्षिक कार्यक्रम तथा आयोजना</p>
+      {% if plan.status != 'approved' %}<p class="text-sm font-bold text-rose-700">— मस्यौदा —</p>{% else %}<p class="text-xs text-slate-500">सभाबाट पारित{% if plan.approval_ref %}: {{ plan.approval_ref }}{% endif %}</p>{% endif %}
+    </header>
+
+    <section>
+      <p class="font-semibold text-slate-800 mb-1">१. स्रोत अनुमान (रु.)</p>
+      <table>
+        <thead><tr><th>स्रोत</th><th class="num">आ.व. {{ plan.years.0|to_nepali_number }}</th><th class="num">आ.व. {{ plan.years.1|to_nepali_number }}</th><th class="num">आ.व. {{ plan.years.2|to_nepali_number }}</th></tr></thead>
+        <tbody>
+          {% for c in heads %}<tr><td>{{ c.head.name }}</td><td class="num">{{ c.y1|money:0 }}</td><td class="num">{{ c.y2|money:0 }}</td><td class="num">{{ c.y3|money:0 }}</td></tr>{% endfor %}
+          <tr class="sub"><td>कुल स्रोत</td><td class="num">{{ t.y1.resources|money:0 }}</td><td class="num">{{ t.y2.resources|money:0 }}</td><td class="num">{{ t.y3.resources|money:0 }}</td></tr>
+          <tr><td>− तलब, भत्ता तथा चालु खर्च</td><td class="num">{{ t.y1.recurrent|money:0 }}</td><td class="num">{{ t.y2.recurrent|money:0 }}</td><td class="num">{{ t.y3.recurrent|money:0 }}</td></tr>
+          {% for lbl, x in liabs %}{% if x.y1 or x.y2 or x.y3 %}<tr><td>− {{ lbl }}</td><td class="num">{{ x.y1|money:0 }}</td><td class="num">{{ x.y2|money:0 }}</td><td class="num">{{ x.y3|money:0 }}</td></tr>{% endif %}{% endfor %}
+          <tr class="sub"><td>= आयोजनाका लागि पुँजीगत सीमा</td><td class="num">{{ t.y1.cap|money:0 }}</td><td class="num">{{ t.y2.cap|money:0 }}</td><td class="num">{{ t.y3.cap|money:0 }}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <p class="font-semibold text-slate-800 mb-1">२. सारांश (आ.व. {{ plan.years.0|to_nepali_number }})</p>
+      <table>
+        <tbody>
+          <tr><td>वडा स्तरीय आयोजना</td><td class="num">{{ ward_groups|length|to_nepali_number }} वडा</td><td class="num">रु. {{ ward_total|money:0 }}</td></tr>
+          <tr><td>पालिका / विषयगत शाखा स्तरीय आयोजना</td><td class="num">{{ sector_groups|length|to_nepali_number }} क्षेत्र</td><td class="num">रु. {{ sector_total|money:0 }}</td></tr>
+          <tr class="sub"><td>जम्मा</td><td class="num">{{ n|to_nepali_number }} आयोजना</td><td class="num">रु. {{ total_y1|money:0 }}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="pb">
+      <p class="font-semibold text-slate-800 mb-1">३. वडा स्तरीय आयोजना</p>
+      <table>
+        <thead><tr><th style="width:2.5rem">क्र.सं.</th><th>आयोजना</th><th>स्थान</th><th>क्षेत्र</th><th>प्रकृति</th><th class="num">कुल लागत</th><th class="num">यो वर्ष</th><th class="num">अर्को २ वर्ष</th></tr></thead>
+        <tbody>
+        {% for g in ward_groups %}
+          <tr class="grp"><td colspan="6">वडा नं. {{ g.name|to_nepali_number }}{% if g.ceiling %} <span class="font-normal text-slate-600">(सीमा रु. {{ g.ceiling|money:0 }})</span>{% endif %}</td><td class="num">{{ g.sum|money:0 }}</td><td></td></tr>
+          {% for ln in g.rows %}<tr><td class="num">{{ forloop.counter|to_nepali_number }}</td><td>{{ ln.bank.name }}<span class="block text-[10px] text-slate-500">{{ ln.bank.code }}</span></td><td>{{ ln.bank.location|default:"" }}</td>
+            <td>{{ ln.bank.sector.name|default:"" }}{% if ln.bank.subsector %} › {{ ln.bank.subsector.name }}{% endif %}</td><td>{% if ln.kind == 'commitment' %}क्रमागत{% else %}{{ ln.bank.get_nature_display }}{% endif %}</td>
+            <td class="num">{{ ln.bank.cost|money:0 }}</td><td class="num">{{ ln.y1|money:0 }}</td><td class="num">{% if ln.y2 or ln.y3 %}{{ ln.y2|money:0 }} / {{ ln.y3|money:0 }}{% else %}—{% endif %}</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="8" class="text-center text-slate-500">वडा स्तरीय आयोजना छैन।</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="pb">
+      <p class="font-semibold text-slate-800 mb-1">४. पालिका / विषयगत शाखा स्तरीय आयोजना</p>
+      <table>
+        <thead><tr><th style="width:2.5rem">क्र.सं.</th><th>आयोजना</th><th>वडा / स्थान</th><th>उपक्षेत्र</th><th>प्रकृति</th><th class="num">कुल लागत</th><th class="num">यो वर्ष</th><th class="num">अर्को २ वर्ष</th></tr></thead>
+        <tbody>
+        {% for g in sector_groups %}
+          <tr class="grp"><td colspan="6">{{ g.name }}</td><td class="num">{{ g.sum|money:0 }}</td><td></td></tr>
+          {% for ln in g.rows %}<tr><td class="num">{{ forloop.counter|to_nepali_number }}</td><td>{{ ln.bank.name }}<span class="block text-[10px] text-slate-500">{{ ln.bank.code }}</span></td>
+            <td>{% if ln.bank.ward %}वडा {{ ln.bank.ward.name|to_nepali_number }}{% endif %}{% if ln.bank.location %} · {{ ln.bank.location }}{% endif %}</td><td>{{ ln.bank.subsector.name|default:"" }}</td>
+            <td>{% if ln.kind == 'commitment' %}क्रमागत{% else %}{{ ln.bank.get_nature_display }}{% endif %}</td>
+            <td class="num">{{ ln.bank.cost|money:0 }}</td><td class="num">{{ ln.y1|money:0 }}</td><td class="num">{% if ln.y2 or ln.y3 %}{{ ln.y2|money:0 }} / {{ ln.y3|money:0 }}{% else %}—{% endif %}</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="8" class="text-center text-slate-500">पालिका स्तरीय आयोजना छैन।</td></tr>{% endfor %}
+          <tr class="sub"><td colspan="6">कुल जम्मा (वडा + पालिका)</td><td class="num">{{ total_y1|money:0 }}</td><td></td></tr>
+        </tbody>
+      </table>
+    </section>
+    <p class="text-[11px] text-slate-500">MTEF {{ plan }} बाट तयार · {% now "Y-m-d" %} मा छापिएको</p>
+  </div></div>
+</div>
+{% endblock %}

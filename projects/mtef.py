@@ -425,3 +425,25 @@ def sector_locked(plan, sector_id):
         return False
     sc = plan.sector_ceilings.filter(sector_id=sector_id).first()
     return bool(sc and sc.submitted_at)
+
+
+def deadline_info(plan, step):
+    """चरणको म्याद: {"bs": "2083-12-15", "days": बाँकी दिन (ऋण = नाघेको)} वा None."""
+    from datetime import date
+
+    from biddings.views_workflow import to_ad
+
+    v = (plan.deadlines or {}).get(str(step))
+    d = to_ad(v) if v else None
+    if d is None:
+        return None
+    return {"bs": v, "days": (d - date.today()).days}
+
+
+def pending_submissions(plan):
+    """चरण ३: पेश गर्न बाँकी वडा र शाखा (सीमा तोकिएका मात्र) — मेरो काम र सम्झनाका लागि."""
+    if plan is None or plan.status != "draft":
+        return [], []
+    wards = [w for w in ward_ceilings(plan).values() if w.amount and not w.submitted_at]
+    secs = [c for c in sector_ceilings(plan).values() if c.amount and not c.submitted_at]
+    return wards, secs

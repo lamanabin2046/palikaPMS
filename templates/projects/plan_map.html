@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}योजनाको नक्सा — आ.व. {{ fy.name }}{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<div class="max-w-7xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">योजनाको नक्सा</h1>
+      <p class="text-sm text-slate-500">योजनाको स्थान (योजनामा राखिएको GPS, नभए साइट फोटोको GPS) — अवस्थाअनुसार रङ।</p>
+    </div>
+    <form method="get" class="flex flex-wrap items-center gap-2">
+      <select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">{% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name }}</option>{% endfor %}</select>
+      <select name="ward" class="form-select !w-auto" onchange="this.form.submit()" aria-label="वडा"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if wsel == w.id|stringformat:"d" %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}</select>
+    </form>
+  </div>
+  <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+    <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#059669"></span> सम्पन्न / अन्तिम बिल</span>
+    <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#2a47a3"></span> चालु</span>
+    <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#94a3b8"></span> सुरु नभएको</span>
+    <span class="ml-auto">नक्सामा {{ points|length|to_nepali_number }} / {{ n|to_nepali_number }} योजना{% if missing %} · <span class="text-amber-700">{{ missing|to_nepali_number }} को स्थान (GPS) छैन</span>{% endif %}</span>
+  </div>
+  <div class="card overflow-hidden"><div id="pmap" style="height:72vh;min-height:420px" role="region" aria-label="योजनाको नक्सा"></div></div>
+  {% if not points %}<p class="text-sm text-slate-500">स्थान भएको योजना छैन। योजना दर्ता / सम्पादनमा GPS राख्नुहोस्, वा इन्जिनियरले मोबाइलबाट साइट फोटो खिच्दा स्थान आफैँ आउँछ।</p>{% endif %}
+</div>
+{{ points|json_script:"pmap-data" }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  if (!window.L) { document.getElementById('pmap').innerHTML = '<p class="p-6 text-sm text-slate-500">नक्सा लोड हुन सकेन — इन्टरनेट जाँच्नुहोस्।</p>'; return; }
+  var pts = JSON.parse(document.getElementById('pmap-data').textContent);
+  var map = L.map('pmap', { scrollWheelZoom: true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  var ND = '०१२३४५६७८९';
+  function np(s) { return String(s).replace(/\d/g, function (d) { return ND[d]; }); }
+  function money(n) { var s = String(Math.round(n)), l = s.slice(-3), r = s.slice(0, -3); if (r) l = ',' + l; return np(r.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + l); }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+  var col = { completed: '#059669', paid: '#059669', running: '#2a47a3', not_started: '#94a3b8' };
+  var bounds = [];
+  pts.forEach(function (p) {
+    var m = L.circleMarker([p.lat, p.lng], { radius: 8, color: '#fff', weight: 2, fillColor: col[p.status] || '#64748b', fillOpacity: 0.95 }).addTo(map);
+    m.bindPopup('<b>' + esc(p.name) + '</b><br>वडा ' + np(esc(p.ward)) + (p.sector ? ' · ' + esc(p.sector) : '') +
+      '<br>विनियोजन रु. ' + money(p.budget) + '<br>' + esc(p.label) + '<br><a href="' + p.url + '">विवरण हेर्ने →</a>');
+    bounds.push([p.lat, p.lng]);
+  });
+  if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 }); else map.setView([27.7, 85.3], 8);
+})();
+</script>
+{% endblock %}

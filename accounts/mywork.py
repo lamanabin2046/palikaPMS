@@ -163,6 +163,44 @@ def _backup_items(P):
                   reverse("backups"), "warn", "fa-database")]
 
 
+def _plan_items(user, P, wards):
+    """योजना तर्जुमा: वडा / शाखाले प्राथमिकता सूची पेश गर्न बाँकी (म्यादसहित); योजना शाखालाई बाँकी सङ्ख्या."""
+    if not P & {"bank.ward_priority", "bank.propose", "bank.manage"}:
+        return []
+    try:
+        from projects import mtef as mt
+        from projects.views_bank import _user_sectors
+
+        plan = mt.current_plan()
+        pw, ps = mt.pending_submissions(plan)
+        if not pw and not ps:
+            return []
+        dl = mt.deadline_info(plan, 3)
+        hint = ""
+        tone = "todo"
+        if dl:
+            from projects import bank as bk
+            hint = bk.np(f"म्याद {dl['bs']}" + (f" — {-dl['days']} दिन नाघेको" if dl["days"] < 0 else f" — {dl['days']} दिन बाँकी"))
+            tone = "urgent" if dl["days"] < 0 else ("warn" if dl["days"] <= 7 else "todo")
+        items = []
+        secs = _user_sectors(user)
+        if secs is not None:
+            mine = [c for c in ps if c.sector_id in secs]
+            if mine:
+                items.append(_item("योजना तर्जुमा", "शाखाको प्रस्ताव सूची पेश गर्न बाँकी", len(mine), reverse("section_priority"), tone, "fa-paper-plane", hint))
+            return items
+        if "bank.ward_priority" in P and "bank.manage" not in P:
+            mine = [w for w in pw if wards is None or w.ward_id in wards]
+            if mine:
+                items.append(_item("योजना तर्जुमा", "वडाको प्राथमिकता सूची पेश गर्न बाँकी", len(mine), reverse("bank_ward_priority"), tone, "fa-list-ol", hint))
+        if "bank.manage" in P:
+            n = len(pw) + len(ps)
+            items.append(_item("योजना तर्जुमा", "प्राथमिकता सूची पेश नगरेका वडा / शाखा", n, reverse("plan_cycle"), "info" if tone == "todo" else tone, "fa-hourglass-half", hint))
+        return items
+    except Exception:
+        return []
+
+
 def _revenue_items(P, wards):
     if not P & {"rev.view", "rev.manage", "rev.approve", "rev.collect", "rev.survey"}:
         return []
@@ -359,7 +397,8 @@ def compute(user):
     P = user_perms(user)
     wards = _wards(user)
     items = (_app_items(P, wards) + _workflow_items(user, P, wards) + _minor_items(P, wards) + _guarantee_items(P, wards) + _retention_items(P, wards)
-             + _budget_items(P, wards) + _sanstha_items(P, wards) + _revenue_items(P, wards) + _backup_items(P))
+             + _budget_items(P, wards) + _sanstha_items(P, wards) + _revenue_items(P, wards) + _backup_items(P)
+             + _plan_items(user, P, wards))
     items.sort(key=lambda i: TONES[i["tone"]])
     return {"items": items, "total": sum(i["count"] for i in items),
             "urgent": sum(i["count"] for i in items if i["tone"] == "urgent")}

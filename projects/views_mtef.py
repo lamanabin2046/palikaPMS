@@ -418,7 +418,24 @@ def plan_cycle(request):
         return redirect("unauthorized")
     plans = list(MTEFPlan.objects.select_related("start_fy"))
     cur = mt.current_plan()
-    plan = next((x for x in plans if str(x.id) == request.GET.get("plan", "")), cur)
+    plan = next((x for x in plans if str(x.id) == (request.GET.get("plan") or request.POST.get("plan") or "")), cur)
+    if request.method == "POST" and request.POST.get("act") == "deadlines" and plan:
+        if "mtef.manage" not in P:
+            return redirect("unauthorized")
+        from biddings.views_workflow import to_ad
+        dl, bad = {}, []
+        for i in range(1, 8):
+            v = (request.POST.get(f"d{i}") or "").strip()
+            if v:
+                if to_ad(v) is None:
+                    bad.append(bk.np(i))
+                else:
+                    dl[str(i)] = v.translate(str.maketrans("०१२३४५६७८९", "0123456789"))
+        plan.deadlines = dl
+        plan.save(update_fields=["deadlines"])
+        (messages.warning if bad else messages.success)(
+            request, "चरणको म्याद सुरक्षित भयो।" + (f" चरण {', '.join(bad)} को मिति मिलेन (२०८३-१२-१५ जस्तो लेख्नुहोस्)।" if bad else ""))
+        return redirect(reverse("plan_cycle") + f"?plan={plan.id}")
     from .views_bank import _user_wards
 
     wards = _user_wards(request.user)
@@ -476,7 +493,8 @@ def plan_cycle(request):
         {"title": "टोल / बस्ती स्तरमा आयोजना छनौट", "who": "टोल / बस्ती भेला, वडा कार्यालय", "where": "आयोजना बैंक",
          "what": "टोल र बस्ती भेलाले मागेका आयोजना आयोजना बैंकमा दर्ता गर्ने। अघिल्लो वर्ष नपरेका तयार आयोजना बैंकमै रहन्छन्।",
          "metric": f"बैंकमा {bk.np(total)} आयोजना ({bk.np(n_ward_src)} वडाबाट)",
-         "buttons": [btn("नयाँ प्रस्ताव", reverse("bank_add"), ("bank.propose", "bank.manage")),
+         "buttons": [btn("टोल भेला दर्ता", reverse("tole_list"), ("bank.propose", "bank.manage"), False),
+                     btn("नयाँ प्रस्ताव", reverse("bank_add"), ("bank.propose", "bank.manage")),
                      btn("Excel बाट आयात", reverse("bank_import"), ("bank.propose", "bank.manage"), False)]},
         {"title": "वडा स्तरमा प्राथमिकीकरण", "who": "वडा समिति", "where": "वडा प्राथमिकता",
          "what": "वडाले आफ्नो सीमाभित्र प्रस्तावलाई १, २, ३… क्रम दिई पेश गर्ने। पेशपछि वडाको सूची लक हुन्छ।",
@@ -510,7 +528,9 @@ def plan_cycle(request):
     after = {"title": "वार्षिक बजेट र कार्यान्वयन", "what": "पठाएपछि पहिलो वर्षका आयोजना आयोजना अभिलेखिकरणमा आफैँ बन्छन् (बैंक नम्बरसँग जोडिएर) — त्यसपछि खरिद, सम्झौता र भुक्तानी अहिलेकै पेजबाट।",
              "metric": (f"{bk.np(exe['n'])} योजना · चालु {bk.np(exe['running'])} · सम्पन्न {bk.np(exe['done'])} · खर्च रु. {bk.money(exe['spent'])}"
                         if plan and plan.sent_at else ("पठाउन बाँकी" if st == "approved" else "—")),
-             "buttons": [b for b in [btn("योजना vs खर्च", reverse("plan_report") + (f"?fiscalyear={plan.start_fy_id}" if plan else ""), None, False)] if b]}
+             "buttons": [b for b in [btn("वार्षिक कार्यक्रम पुस्तिका", reverse("budget_book") + (f"?plan={plan.id}" if plan else ""), None, False),
+                                     btn("त्रैमासिक प्रगति", reverse("progress_report") + (f"?fiscalyear={plan.start_fy_id}" if plan else ""), None, False),
+                                     btn("योजना vs खर्च", reverse("plan_report") + (f"?fiscalyear={plan.start_fy_id}" if plan else ""), None, False)] if b]}
     WHEN = ['माघ – फागुन', 'फागुन – चैत', 'चैत', 'वैशाख', 'वैशाख – जेठ', 'जेठ', 'असार १० भित्र']
     current = mt.cycle_step(plan) if plan else 1
     for i, s_ in enumerate(stages, 1):
@@ -518,6 +538,7 @@ def plan_cycle(request):
         s_["when"] = WHEN[i - 1]
         s_["buttons"] = [b for b in s_["buttons"] if b]
         s_["state"] = "done" if i < current else ("current" if i == current else "pending")
+        s_["deadline"] = mt.deadline_info(plan, i) if plan else None
     return render(request, "projects/plan_cycle.html", {
         "stages": stages, "after": after, "plan": plan, "plans": plans, "current": current, "ward_rows": ward_rows,
         "sector_rows": srows_c,

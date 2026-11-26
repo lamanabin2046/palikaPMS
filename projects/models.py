@@ -128,6 +128,7 @@ class SubSector(models.Model):
 class WorkCategory(models.Model):
     """कामको प्रकार: सडक/बाटो, भवन, खानेपानी … (पालिकाले थप्न/बदल्न मिल्ने)."""
     name = models.CharField("कामको प्रकार", max_length=150)
+    econ_code = models.CharField("खर्च शीर्षक (आर्थिक संकेत, SuTRA)", max_length=20, blank=True)
     sort = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField("सक्रिय", default=True)
 
@@ -1026,6 +1027,8 @@ class BankProject(models.Model):
     hold_at = models.DateTimeField(null=True, blank=True)
     # तर्जुमा चक्रको कुन चरणमा थपिएको (टोल/वडाबाट सामान्य प्रक्रियामा भए खाली) — पछि थपिएको देखाउन
     entry_step = models.PositiveSmallIntegerField("थपिएको चरण", null=True, blank=True)
+    meeting = models.ForeignKey("ToleMeeting", on_delete=models.SET_NULL, null=True, blank=True, related_name="projects",
+                                verbose_name="टोल / बस्ती भेला")
     converted = models.BooleanField("पुरानो योजनाबाट रूपान्तरण", default=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1067,6 +1070,7 @@ class MTEFPlan(models.Model):
     exec_at = models.DateTimeField(null=True, blank=True)
     y2_name = models.CharField(max_length=20)
     y3_name = models.CharField(max_length=20)
+    deadlines = models.JSONField("चरणको म्याद (वि.सं.)", default=dict, blank=True)   # {"1": "2083-11-30", ...}
     # चालु खर्च (तलब, भत्ता, कार्यालय सञ्चालन, सामाजिक सुरक्षा) — स्रोतबाट घटाएर पुँजीगत बजेट सीमा
     recurrent_y1 = models.DecimalField("चालु खर्च (पहिलो वर्ष)", max_digits=16, decimal_places=2, default=0)
     recurrent_y2 = models.DecimalField("चालु खर्च (दोस्रो वर्ष)", max_digits=16, decimal_places=2, default=0)
@@ -1181,3 +1185,29 @@ class SectionStaff(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ToleMeeting(models.Model):
+    """टोल / बस्ती भेला (तर्जुमा चक्र चरण २) — उपस्थिति, निर्णय र प्रमाण; भेलाबाट आएका आयोजना यसमा जोडिन्छन्."""
+    ward = models.ForeignKey(Ward, on_delete=models.CASCADE, related_name="tole_meetings", verbose_name="वडा")
+    fiscalyear = models.ForeignKey(FiscalYear, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="आ.व.")
+    tole = models.CharField("टोल / बस्ती", max_length=200)
+    date = models.DateField("भेला मिति")
+    venue = models.CharField("स्थान", max_length=200, blank=True)
+    chair = models.CharField("अध्यक्षता", max_length=200, blank=True)
+    total = models.PositiveIntegerField("जम्मा उपस्थिति", default=0)
+    women = models.PositiveIntegerField("महिला", default=0)
+    dalit = models.PositiveIntegerField("दलित", default=0)
+    janajati = models.PositiveIntegerField("आदिवासी / जनजाति", default=0)
+    disabled = models.PositiveIntegerField("अपाङ्गता भएका", default=0)
+    decision = models.TextField("निर्णय / माग", blank=True)
+    minute = models.FileField("माइन्युट / निर्णय (फाइल)", upload_to="tole/", null=True, blank=True)
+    photo = models.ImageField("फोटो", upload_to="tole/", null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+
+    def __str__(self):
+        return f"{self.tole} ({self.date})"

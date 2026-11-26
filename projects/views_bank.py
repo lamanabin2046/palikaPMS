@@ -43,6 +43,36 @@ def _user_wards(user):
     return uw(user)
 
 
+def to_bs_np(d):
+    from biddings.views_workflow import to_bs
+
+    return bk.np(to_bs(d))
+
+
+def _similar(name, ward, sector, exclude_id=None, limit=3):
+    """नाम मिल्दोजुल्दो (≥ ७५%) सक्रिय आयोजना — उही वडामा, वडा नभए उही क्षेत्रमा."""
+    from difflib import SequenceMatcher
+
+    def norm(x):
+        return " ".join((x or "").replace("–", " ").replace("-", " ").split()).lower()
+
+    qs = BankProject.objects.filter(hold="").exclude(id=exclude_id)
+    if ward is not None:
+        qs = qs.filter(ward=ward)
+    elif sector is not None:
+        qs = qs.filter(sector=sector, ward__isnull=True)
+    else:
+        return []
+    n = norm(name)
+    hits = []
+    for b in qs.only("id", "code", "name")[:2000]:
+        r = SequenceMatcher(None, n, norm(b.name)).ratio()
+        if r >= 0.75:
+            hits.append((r, b))
+    hits.sort(key=lambda x: -x[0])
+    return [b for _r, b in hits[:limit]]
+
+
 def _user_sectors(user):
     """विषयगत शाखा (भूमिका ११) का क्षेत्र; अरूका लागि None (सबै)."""
     if getattr(user, "user_type", None) != "11":
@@ -343,6 +373,14 @@ def _proposal_form(request, b):
             errors.append("उपक्षेत्र छानिएको क्षेत्रको होइन।")
         if name and ward and BankProject.objects.filter(name=name, ward=ward, hold="").exclude(id=b.id).exists():
             errors.append(f"वडा {ward.name} मा “{name}” नाममा आयोजना बैंकमा पहिले नै छ।")
+        similar = _similar(name, ward, sector, b.id) if (name and not errors and not request.POST.get("dup_ok")) else []
+        if similar:
+            errors.append("मिल्दोजुल्दो आयोजना बैंकमा पहिले नै छन्: " + "; ".join(f"{x.code} “{x.name}”" for x in similar)
+                          + " — दोहोरो होइन भने तल “दोहोरो होइन” मा ✓ गरी फेरि सुरक्षित गर्नुहोस्।")
+        from .models import ToleMeeting
+        meeting = ToleMeeting.objects.filter(id=request.POST.get("meeting") or 0).first()
+        if meeting and (wards is not None and meeting.ward_id not in wards):
+            meeting = None
         # तर्जुमा चक्र: वडाले सूची पेश गरिसकेपछि वडाबाट नयाँ प्रस्ताव थप्न पालिकाको योजना शाखा (bank.manage) मात्र
         plan = mt.current_plan()
         manage = "bank.manage" in user_perms(request.user)
@@ -359,6 +397,7 @@ def _proposal_form(request, b):
                 b.name, b.ward, b.sector, b.subsector, b.fiscalyear = name, ward, sector, sub, fy
                 b.location = f.text("location", "स्थान", required=False)
                 b.nature, b.source = nature, source
+                b.meeting = meeting
                 b.requested_by = f.text("requested_by", "", required=False)[:200]
                 b.request_ref = f.text("request_ref", "", required=False)[:200]
                 b.description = f.text("description", "", required=False)
@@ -389,6 +428,12 @@ def _proposal_form(request, b):
     ward_opts = [("", "—")] + [(str(w.id), f"वडा नं. {w.name}") for w in
                                (Ward.objects.filter(id__in=wards) if wards is not None else Ward.objects.all())]
     fy_default = b.fiscalyear_id or FiscalYear.objects.order_by("-name").values_list("id", flat=True).first()
+    from .models import ToleMeeting
+    mq = ToleMeeting.objects.select_related("ward")
+    if wards is not None:
+        mq = mq.filter(ward_id__in=wards)
+    meeting_opts = [("", "— भेला छान्नुहोस् (ऐच्छिक) —")] + [
+        (str(m.id), f"वडा {m.ward.name} · {m.tole} ({to_bs_np(m.date)})") for m in mq[:80]]
     sec_qs = Sector.objects.filter(is_active=True)
     if my_sectors is not None:
         sec_qs = sec_qs.filter(id__in=my_sectors)
@@ -413,6 +458,8 @@ def _proposal_form(request, b):
         F("need", "आवश्यकता / औचित्य", v("need", b.need), kind="textarea", wide=True, required=False),
     ]
     s2 = [
+        F("meeting", "टोल / बस्ती भेला", v("meeting", str(b.meeting_id or "")), kind="select", options=meeting_opts, required=False,
+          hint="भेला दर्ता: योजना तर्जुमा → टोल भेला"),
         F("source", "माग गर्ने", v("source", b.source), kind="select",
           options=[("section", "पालिका विषयगत शाखा")] if my_sectors is not None else list(BankProject.SOURCE)),
         F("requested_by", "बस्ती / टोल / संस्था", v("requested_by", b.requested_by), required=False),
@@ -429,6 +476,8 @@ def _proposal_form(request, b):
         F("doc_decision", "माग / निर्णय (फाइल)", kind="file", required=False),
         F("doc_photo", "स्थलको फोटो", kind="file", required=False),
     ]
+    if request.method == "POST" and any("मिल्दोजुल्दो" in e for e in errors):
+        s3.append(F("dup_ok", "दोहोरो होइन", False, kind="checkbox", required=False, hint="मैले जाँचेँ — यो फरक आयोजना हो"))
     return _render_form(request, b, {
         "title": "नयाँ आयोजना प्रस्ताव" if is_new else f"प्रस्ताव सम्पादन — {b.code}", "icon": "lightbulb", "errors": errors,
         "submit": "आयोजना बैंकमा सुरक्षित गर्नुहोस्", "upload": True, "sub_tree": sub_tree,

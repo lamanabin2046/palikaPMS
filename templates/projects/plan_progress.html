@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}त्रैमासिक प्रगति — आ.व. {{ fy.name }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">त्रैमासिक प्रगति र अनुगमन</h1>
+      <p class="text-sm text-slate-500">वित्तीय प्रगति (भुक्तानी ÷ विनियोजन) र भौतिक प्रगति (साइट फोटोमा राखिएको %) लाई समयअनुसार अपेक्षित प्रगतिसँग दाँजेर ढिलो योजना देखाउँछ।</p>
+    </div>
+    <form method="get" class="no-print flex flex-wrap items-center gap-2">
+      <select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">{% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name }}</option>{% endfor %}</select>
+      <select name="ward" class="form-select !w-auto" onchange="this.form.submit()" aria-label="वडा"><option value="">सबै वडा</option>{% for w in wards %}<option value="{{ w.id }}" {% if wsel == w.id|stringformat:"d" %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}</select>
+      <label class="flex items-center gap-1 text-sm text-slate-600"><input type="checkbox" name="lag" value="1" {% if only_lag %}checked{% endif %} onchange="this.form.submit()"> ढिलो मात्र</label>
+      <button type="button" onclick="window.print()" class="btn-secondary"><i class="fas fa-print"></i> छाप्नुहोस्</button>
+    </form>
+  </div>
+
+  <div class="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-2.5 text-sm text-brand-900">
+    <i class="far fa-calendar"></i> {% if quarter == 'आ.व. सुरु भएको छैन' or quarter == 'आ.व. सकिएको' %}<b>{{ quarter }}</b>{% elif quarter %}अहिले <b>{{ quarter }}</b> त्रैमासिक{% endif %}{% if expected is not None %} · आ.व.को समय बितेको अनुसार अपेक्षित प्रगति <b>{{ expected|to_nepali_number }}%</b>{% endif %}
+    <span class="text-xs text-brand-700">· अपेक्षितभन्दा २०% भन्दा पछि परेका सुरु भएका / नभएका योजना “ढिलो” मानिन्छन्।</span>
+  </div>
+
+  <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+    <div class="card p-4"><p class="text-xs text-slate-500">योजना</p><p class="text-xl font-bold text-slate-800">{{ summary.n|to_nepali_number }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">वित्तीय प्रगति</p><p class="text-xl font-bold text-slate-800">{{ summary.fin|to_nepali_number }}%</p><p class="text-[11px] text-slate-500">रु. {{ summary.paid|money:0 }} / {{ summary.alloc|money:0 }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">सम्पन्न</p><p class="text-xl font-bold text-emerald-700">{{ summary.done|to_nepali_number }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">सुरु नभएका</p><p class="text-xl font-bold text-slate-700">{{ summary.not_started|to_nepali_number }}</p></div>
+    <div class="card p-4 {% if summary.lag %}border-rose-200 bg-rose-50{% endif %}"><p class="text-xs text-slate-500">ढिलो</p><p class="text-xl font-bold {% if summary.lag %}text-rose-700{% else %}text-emerald-700{% endif %}">{{ summary.lag|to_nepali_number }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">भौतिक प्रगति नराखिएका</p><p class="text-xl font-bold text-amber-700">{{ summary.no_phys|to_nepali_number }}</p></div>
+  </div>
+
+  <section class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">वडागत सारांश</h2></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">वडा</th><th class="px-2 py-2 text-right font-medium">योजना</th>
+        <th class="px-2 py-2 text-right font-medium">विनियोजन</th><th class="px-2 py-2 text-right font-medium">भुक्तानी</th><th class="px-2 py-2 text-right font-medium">वित्तीय %</th>
+        <th class="px-2 py-2 text-right font-medium">औसत भौतिक %</th><th class="px-2 py-2 text-right font-medium">सम्पन्न</th><th class="px-2 py-2 text-right font-medium">ढिलो</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for w in ward_rows %}<tr><td class="px-4 py-1.5">वडा {{ w.name|to_nepali_number }}</td><td class="px-2 py-1.5 text-right">{{ w.n|to_nepali_number }}</td>
+        <td class="px-2 py-1.5 text-right">{{ w.alloc|money:0 }}</td><td class="px-2 py-1.5 text-right">{{ w.paid|money:0 }}</td><td class="px-2 py-1.5 text-right">{{ w.fin|to_nepali_number }}%</td>
+        <td class="px-2 py-1.5 text-right">{% if w.phys_avg is not None %}{{ w.phys_avg|to_nepali_number }}%{% else %}—{% endif %}</td><td class="px-2 py-1.5 text-right">{{ w.done|to_nepali_number }}</td>
+        <td class="px-2 py-1.5 text-right {% if w.lag %}text-rose-700 font-semibold{% endif %}">{{ w.lag|to_nepali_number }}</td></tr>
+      {% empty %}<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500">यो आ.व.मा योजना छैन।</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">योजनागत प्रगति {% if only_lag %}<span class="text-xs font-normal text-rose-700">— ढिलो मात्र</span>{% endif %}</h2></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">योजना</th><th class="px-2 py-2 text-left font-medium">अवस्था</th>
+        <th class="px-2 py-2 text-right font-medium">विनियोजन</th><th class="px-2 py-2 font-medium" style="min-width:9rem">वित्तीय</th><th class="px-2 py-2 font-medium" style="min-width:9rem">भौतिक</th><th class="px-2 py-2"></th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for r in rows %}<tr class="{% if r.lag %}bg-rose-50/40{% endif %}">
+        <td class="px-4 py-1.5"><a href="{% url 'project_timeline' r.p.id %}" class="font-medium text-slate-800 hover:text-brand-700">{{ r.p.name }}</a><span class="block text-[11px] text-slate-500">वडा {{ r.p.ward.name|default:"—"|to_nepali_number }}{% if r.p.sector %} · {{ r.p.sector.name }}{% endif %}</span></td>
+        <td class="px-2 py-1.5 text-xs">{{ r.status_label }}</td>
+        <td class="px-2 py-1.5 text-right">{{ r.alloc|money:0 }}</td>
+        <td class="px-2 py-1.5"><div class="flex items-center gap-2"><div class="h-1.5 flex-1 rounded bg-slate-100"><div class="h-1.5 rounded bg-brand-500" style="width:{% if r.fin > 100 %}100{% else %}{{ r.fin }}{% endif %}%"></div></div><span class="w-10 text-right text-xs">{{ r.fin|to_nepali_number }}%</span></div></td>
+        <td class="px-2 py-1.5">{% if r.phys is not None %}<div class="flex items-center gap-2"><div class="h-1.5 flex-1 rounded bg-slate-100"><div class="h-1.5 rounded {% if r.lag %}bg-rose-500{% else %}bg-emerald-500{% endif %}" style="width:{{ r.phys }}%"></div></div><span class="w-10 text-right text-xs">{{ r.phys|to_nepali_number }}%</span></div>{% else %}<span class="text-xs text-slate-400">फोटो / % छैन</span>{% endif %}</td>
+        <td class="px-2 py-1.5 text-right">{% if r.lag %}<span class="text-xs rounded-full bg-rose-100 px-2 py-0.5 text-rose-700">ढिलो</span>{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">{% if only_lag %}ढिलो योजना छैन।{% else %}योजना छैन।{% endif %}</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+  <p class="text-xs text-slate-500">भौतिक प्रगति % इन्जिनियरले साइट फोटो (मोबाइल) राख्दा भर्छन्। सम्पन्न योजना १००% मानिन्छ। भौतिक % नभए वित्तीय प्रगतिलाई आधार मानिन्छ।</p>
+</div>
+{% endblock %}

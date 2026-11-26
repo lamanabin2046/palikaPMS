@@ -21,7 +21,9 @@
       <div class="flex-1 min-w-0">
         <div class="flex flex-wrap items-baseline justify-between gap-2">
           <p class="font-semibold text-slate-800">{{ s.title }} {% if s.state == 'current' %}<span class="ml-1 text-xs font-medium text-brand-700">← अहिले यहाँ</span>{% endif %}</p>
-          <p class="text-xs text-slate-500"><i class="far fa-calendar"></i> {{ s.when }}</p>
+          <p class="text-xs text-slate-500"><i class="far fa-calendar"></i> {{ s.when }}
+            {% if s.deadline %}<span class="ml-1 rounded-full px-2 py-0.5 font-medium {% if s.state == 'done' %}bg-slate-100 text-slate-500{% elif s.deadline.days < 0 %}bg-rose-50 text-rose-700{% elif s.deadline.days <= 7 %}bg-amber-50 text-amber-700{% else %}bg-brand-50 text-brand-700{% endif %}">
+              म्याद {{ s.deadline.bs|to_nepali_number }}{% if s.state != 'done' %} · {% if s.deadline.days < 0 %}{{ s.deadline.days|stringformat:"d"|cut:"-"|to_nepali_number }} दिन नाघेको{% elif s.deadline.days == 0 %}आज{% else %}{{ s.deadline.days|to_nepali_number }} दिन बाँकी{% endif %}{% endif %}</span>{% endif %}</p>
         </div>
         <p class="text-sm text-slate-600 mt-0.5">{{ s.what }}</p>
         <p class="text-xs text-slate-500 mt-1"><i class="fas fa-user"></i> {{ s.who }} · <i class="fas fa-location-dot"></i> {{ s.where }}</p>
@@ -69,6 +71,18 @@
       </div>
     </li>
   </ol>
+  {% if plan and 'mtef.manage' in me.perms %}
+  <details class="card p-4" {% if not plan.deadlines %}open{% endif %}>
+    <summary class="cursor-pointer font-semibold text-slate-700"><i class="far fa-clock text-brand-500"></i> चरणको म्याद तोक्नुहोस् <span class="text-xs font-normal text-slate-500">— वडा / शाखाले “मेरो काम” मा सम्झना पाउँछन्</span></summary>
+    <form method="post" class="mt-3" hx-boost="false">{% csrf_token %}<input type="hidden" name="act" value="deadlines"><input type="hidden" name="plan" value="{{ plan.id }}">
+      <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+        {% for s in stages %}<label class="text-xs text-slate-600">{{ s.n|to_nepali_number }}. {{ s.title }}
+          <input name="d{{ s.n }}" value="{% if s.deadline %}{{ s.deadline.bs }}{% endif %}" class="form-input nepali-date mt-1" placeholder="२०८३-१२-१५" autocomplete="off"></label>{% endfor %}
+      </div>
+      <div class="mt-3 flex justify-end"><button class="btn-primary"><i class="fas fa-floppy-disk"></i> म्याद सुरक्षित गर्नुहोस्</button></div>
+    </form>
+  </details>
+  {% endif %}
   <p class="text-xs text-slate-500">महिना अनुमानित हुन् — पालिकाको आफ्नै समयतालिका र योजना तर्जुमा दिग्दर्शन अनुसार गर्नुहोस्।</p>
 </div>
 {% endblock %}

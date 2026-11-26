@@ -1,0 +1,45 @@
+{% extends 'projects/revenue_public_base.html' %}
+{% load outputs nepali_date %}
+{% block title %}स्वीकृत वार्षिक कार्यक्रम — नागरिक जानकारी{% endblock %}
+{% block home %}{% url 'citizen_list' %}{% endblock %}
+{% block subtitle %}स्वीकृत वार्षिक कार्यक्रम — नागरिक जानकारी{% endblock %}
+{% block footer %}योजना शाखा{% endblock %}
+{% block body %}
+{% if not plan %}
+  <div class="card p-6 text-center text-slate-500">सभाबाट पारित वार्षिक कार्यक्रम अहिलेसम्म सार्वजनिक गरिएको छैन।</div>
+{% else %}
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-slate-800">आ.व. {{ plan.years.0|to_nepali_number }} को स्वीकृत वार्षिक कार्यक्रम</h1>
+      <p class="text-sm text-slate-500">सभाबाट पारित{% if plan.approval_ref %} ({{ plan.approval_ref }}){% endif %} · वडागत र पालिका स्तरीय आयोजना</p>
+    </div>
+    {% if plans|length > 1 %}<form method="get"><select name="plan" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">{% for p in plans %}<option value="{{ p.id }}" {% if p.id == plan.id %}selected{% endif %}>आ.व. {{ p.years.0 }}</option>{% endfor %}</select></form>{% endif %}
+  </div>
+  <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+    <div class="card p-4"><p class="text-xs text-slate-500">कुल अनुमानित स्रोत</p><p class="text-lg font-bold text-slate-800">रु. {{ t.y1.resources|money:0 }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">आयोजनाका लागि</p><p class="text-lg font-bold text-slate-800">रु. {{ total|money:0 }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">आयोजना सङ्ख्या</p><p class="text-lg font-bold text-slate-800">{{ n|to_nepali_number }}</p></div>
+  </div>
+  {% if ward_rows %}
+  <section class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">वडाको बजेट सीमा</h2></div>
+    <div class="p-4 grid gap-2" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      {% for w in ward_rows %}<div class="rounded-lg border border-slate-200 px-3 py-2"><p class="text-xs text-slate-500">वडा नं. {{ w.ward.name|to_nepali_number }}</p><p class="font-semibold text-slate-800">रु. {{ w.amount|money:0 }}</p></div>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% for g in groups %}
+  <section class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between"><h2 class="font-semibold text-slate-700">{{ g.title }}</h2><span class="text-sm font-semibold text-slate-700">रु. {{ g.sum|money:0 }}</span></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">आयोजना</th><th class="px-2 py-2 text-left font-medium">स्थान</th><th class="px-2 py-2 text-left font-medium">क्षेत्र</th><th class="px-2 py-2 text-right font-medium">यो वर्षको बजेट</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for ln in g.rows %}<tr><td class="px-4 py-1.5 text-slate-800">{{ ln.bank.name }}</td><td class="px-2 py-1.5 text-slate-600">{{ ln.bank.location|default:"" }}</td>
+        <td class="px-2 py-1.5 text-slate-600">{{ ln.bank.sector.name|default:"" }}</td><td class="px-2 py-1.5 text-right">{{ ln.y1|money:0 }}</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+  {% endfor %}
+  <p class="text-xs text-slate-500">कार्यान्वयनको प्रगति हेर्न: <a href="{% url 'citizen_list' %}" class="text-blue-700 underline">योजनाहरूको प्रगति</a></p>
+{% endif %}
+{% endblock %}

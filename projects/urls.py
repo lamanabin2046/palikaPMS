@@ -1,6 +1,6 @@
 from django.urls import path
 from .import views
-from . import views_app, views_budget, views_firms, views_mb, views_minor, views_sanstha, views_field, views_revenue, views_dashboard, views_deductions, views_guarantees, views_outputs, views_sectors, views_bank, views_mtef
+from . import views_app, views_budget, views_firms, views_mb, views_minor, views_sanstha, views_field, views_revenue, views_dashboard, views_deductions, views_guarantees, views_outputs, views_sectors, views_bank, views_mtef, views_plan_extra
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -129,6 +129,13 @@ urlpatterns = [
     path('Bank/import/', views_bank.bank_import, name='bank_import'),
     path('Bank/WardPriority/', views_bank.ward_priority, name='bank_ward_priority'),
     path('Bank/Section/', views_bank.section_priority, name='section_priority'),
+    path('Bank/Tole/', views_plan_extra.tole_list, name='tole_list'),
+    path('Plan/BudgetBook/', views_plan_extra.budget_book, name='budget_book'),
+    path('Plan/SuTRA/', views_plan_extra.sutra_export, name='sutra_export'),
+    path('Plan/Coding/', views_plan_extra.coding_report, name='coding_report'),
+    path('Plan/Progress/', views_plan_extra.progress_report, name='progress_report'),
+    path('Plan/Map/', views_plan_extra.project_map, name='project_map'),
+    path('Public/Plan/', views_plan_extra.public_plan, name='public_plan'),
     path('Bank/Outside/', views_bank.outside_bank, name='bank_outside'),
     path('Bank/Codes/', views_bank.codes_pending, name='bank_codes'),
     path('Bank/Convert/', views_bank.convert, name='bank_convert'),

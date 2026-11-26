@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}टोल / बस्ती भेला{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">टोल / बस्ती भेला</h1>
+      <p class="text-sm text-slate-500">तर्जुमा चक्र चरण २ — भेलाको उपस्थिति, निर्णय र प्रमाण। आयोजना बैंकमा प्रस्ताव गर्दा कुन भेलाबाट आएको हो छान्नुहोस्।</p>
+    </div>
+    <form method="get" class="flex items-center gap-2">
+      <select name="ward" class="form-select !w-auto" onchange="this.form.submit()" aria-label="वडा">
+        <option value="">सबै वडा</option>
+        {% for w in wards %}<option value="{{ w.id }}" {% if wsel == w.id|stringformat:"d" %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+    <div class="card p-3"><p class="text-xs text-slate-500">भेला</p><p class="text-xl font-bold text-slate-800">{{ tot.n|to_nepali_number }}</p></div>
+    <div class="card p-3"><p class="text-xs text-slate-500">जम्मा उपस्थिति</p><p class="text-xl font-bold text-slate-800">{{ tot.total|to_nepali_number }}</p></div>
+    <div class="card p-3"><p class="text-xs text-slate-500">महिला</p><p class="text-xl font-bold text-slate-800">{{ tot.women|to_nepali_number }}</p></div>
+    <div class="card p-3"><p class="text-xs text-slate-500">दलित</p><p class="text-xl font-bold text-slate-800">{{ tot.dalit|to_nepali_number }}</p></div>
+    <div class="card p-3"><p class="text-xs text-slate-500">बैंकमा आयोजना</p><p class="text-xl font-bold text-brand-700">{{ tot.projects|to_nepali_number }}</p></div>
+  </div>
+
+  {% if can %}
+  <form method="post" enctype="multipart/form-data" class="card overflow-hidden" hx-boost="false" id="tole-form">{% csrf_token %}
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">{% if edit %}भेला सच्याउने — {{ edit.tole }}{% else %}नयाँ भेला दर्ता{% endif %}</h2></div>
+    {% if errors %}<div class="mx-5 mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">{% for e in errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <div class="p-5 grid gap-4 md:grid-cols-4">
+      <label class="form-label">वडा <span class="text-rose-500">*</span>
+        <select name="ward" class="form-select w-full mt-1" required>{% for w in wards %}<option value="{{ w.id }}" {% if form.ward == w.id|stringformat:"d" %}selected{% endif %}>वडा {{ w.name|to_nepali_number }}</option>{% endfor %}</select></label>
+      <label class="form-label md:col-span-2">टोल / बस्ती <span class="text-rose-500">*</span><input name="tole" value="{{ form.tole|default:'' }}" class="form-input mt-1" required placeholder="जस्तै: जनता टोल"></label>
+      <label class="form-label">भेला मिति <span class="text-rose-500">*</span>
+        <div class="relative mt-1"><input name="date" value="{{ form.date|default:'' }}" class="form-input nepali-date !pr-9" placeholder="YYYY-MM-DD" autocomplete="off" required>
+        <i class="far fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i></div></label>
+      <label class="form-label md:col-span-2">स्थान<input name="venue" value="{{ form.venue|default:'' }}" class="form-input mt-1" placeholder="जस्तै: सामुदायिक भवन"></label>
+      <label class="form-label md:col-span-2">अध्यक्षता<input name="chair" value="{{ form.chair|default:'' }}" class="form-input mt-1" placeholder="जस्तै: टोल विकास संस्थाका अध्यक्ष"></label>
+      <label class="form-label">जम्मा उपस्थिति<input name="total" value="{{ form.total|default:'' }}" inputmode="numeric" class="form-input mt-1 text-right"></label>
+      <label class="form-label">महिला<input name="women" value="{{ form.women|default:'' }}" inputmode="numeric" class="form-input mt-1 text-right"></label>
+      <label class="form-label">दलित<input name="dalit" value="{{ form.dalit|default:'' }}" inputmode="numeric" class="form-input mt-1 text-right"></label>
+      <label class="form-label">आदिवासी / जनजाति<input name="janajati" value="{{ form.janajati|default:'' }}" inputmode="numeric" class="form-input mt-1 text-right"></label>
+      <label class="form-label">अपाङ्गता भएका<input name="disabled" value="{{ form.disabled|default:'' }}" inputmode="numeric" class="form-input mt-1 text-right"></label>
+      <label class="form-label md:col-span-3">निर्णय / माग<textarea name="decision" rows="2" class="form-input mt-1" placeholder="भेलाले माग गरेका आयोजना र निर्णय">{{ form.decision|default:'' }}</textarea></label>
+      <label class="form-label md:col-span-2">माइन्युट / निर्णय (फाइल){% if edit.minute %} <a href="{{ edit.minute.url }}" target="_blank" rel="noopener" class="text-xs text-brand-700">(हालको हेर्ने)</a>{% endif %}
+        <input type="file" name="minute" accept=".pdf,.jpg,.jpeg,.png" class="form-input mt-1"></label>
+      <label class="form-label md:col-span-2">फोटो{% if edit.photo %} <a href="{{ edit.photo.url }}" target="_blank" rel="noopener" class="text-xs text-brand-700">(हालको हेर्ने)</a>{% endif %}
+        <input type="file" name="photo" accept=".jpg,.jpeg,.png" class="form-input mt-1"></label>
+    </div>
+    <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex justify-end gap-2">
+      {% if edit %}<a href="{% url 'tole_list' %}" class="btn-secondary">रद्द</a>{% endif %}
+      <button class="btn-primary"><i class="fas fa-floppy-disk"></i> भेला सुरक्षित गर्नुहोस्</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <section class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">दर्ता भएका भेला</h2></div>
+    {% if rows %}
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr>
+        <th class="px-4 py-2 text-left font-medium">मिति</th><th class="px-2 py-2 text-left font-medium">वडा / टोल</th>
+        <th class="px-2 py-2 text-right font-medium">उपस्थिति</th><th class="px-2 py-2 text-right font-medium">महिला</th><th class="px-2 py-2 text-right font-medium">दलित</th>
+        <th class="px-2 py-2 text-left font-medium">आयोजना</th><th class="px-2 py-2 text-left font-medium">प्रमाण</th><th class="px-2 py-2"></th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for m in rows %}
+        <tr class="align-top">
+          <td class="px-4 py-2 whitespace-nowrap">{{ m.date|bs }}</td>
+          <td class="px-2 py-2"><p class="font-medium text-slate-800">वडा {{ m.ward.name|to_nepali_number }} · {{ m.tole }}</p>
+            {% if m.decision %}<p class="text-[11px] text-slate-500 line-clamp-2">{{ m.decision }}</p>{% endif %}</td>
+          <td class="px-2 py-2 text-right">{{ m.total|to_nepali_number }}</td>
+          <td class="px-2 py-2 text-right">{{ m.women|to_nepali_number }}{% if m.total %}<span class="block text-[10px] text-slate-400">{% widthratio m.women m.total 100 %}%</span>{% endif %}</td>
+          <td class="px-2 py-2 text-right">{{ m.dalit|to_nepali_number }}</td>
+          <td class="px-2 py-2 text-xs">{% for b in m.projects.all %}<a href="{% url 'bank_list' %}?open={{ b.id }}" class="block text-brand-700">{{ b.code }} {{ b.name|truncatechars:28 }}</a>{% empty %}<span class="text-slate-400">—</span>{% endfor %}</td>
+          <td class="px-2 py-2 text-xs whitespace-nowrap">{% if m.minute %}<a href="{{ m.minute.url }}" target="_blank" rel="noopener" class="text-brand-700"><i class="fas fa-file"></i> माइन्युट</a>{% endif %}
+            {% if m.photo %}<a href="{{ m.photo.url }}" target="_blank" rel="noopener" class="ml-1 text-brand-700"><i class="fas fa-image"></i> फोटो</a>{% endif %}</td>
+          <td class="px-2 py-2 text-right whitespace-nowrap">{% if can %}<a href="?edit={{ m.id }}#tole-form" class="text-xs text-brand-700">सच्याउने</a>
+            {% if not m.projects.exists %}<form method="post" class="inline" hx-boost="false" onsubmit="return confirm('यो भेला मेटाउने?')">{% csrf_token %}<input type="hidden" name="act" value="delete"><input type="hidden" name="id" value="{{ m.id }}"><button class="ml-2 text-xs text-rose-600">मेटाउने</button></form>{% endif %}{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <p class="px-5 py-8 text-center text-sm text-slate-500">अहिलेसम्म भेला दर्ता भएको छैन।</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

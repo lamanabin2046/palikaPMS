@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load nepali_date outputs %}
+{% block title %}SuTRA का लागि बजेट निर्यात{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">SuTRA का लागि बजेट निर्यात</h1>
+      <p class="text-sm text-slate-500">आ.व.का सबै योजना — बजेट उपशीर्षक, खर्च शीर्षक (आर्थिक संकेत), स्रोत र रकमसहित Excel। लेखा शाखाले SuTRA मा फेरि टाइप गर्नु नपरोस्।</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <form method="get"><select name="fiscalyear" class="form-select !w-auto" onchange="this.form.submit()" aria-label="आ.व.">
+        {% for f in fys %}<option value="{{ f.id }}" {% if fy and f.id == fy.id %}selected{% endif %}>आ.व. {{ f.name }}</option>{% endfor %}
+      </select></form>
+      <a href="?fiscalyear={{ fy.id }}&export=xlsx" class="btn-primary" hx-boost="false"><i class="fas fa-file-excel"></i> Excel डाउनलोड</a>
+    </div>
+  </div>
+
+  <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="card p-4"><p class="text-xs text-slate-500">योजना</p><p class="text-xl font-bold text-slate-800">{{ n|to_nepali_number }}</p></div>
+    <div class="card p-4"><p class="text-xs text-slate-500">विनियोजित जम्मा</p><p class="text-xl font-bold text-slate-800">रु. {{ total|money:0 }}</p></div>
+    <div class="card p-4 {% if missing.head %}border-amber-200 bg-amber-50{% endif %}"><p class="text-xs text-slate-500">बजेट उपशीर्षक नतोकिएका</p><p class="text-xl font-bold {% if missing.head %}text-amber-700{% else %}text-emerald-700{% endif %}">{{ missing.head|to_nepali_number }}</p></div>
+    <div class="card p-4 {% if missing.econ %}border-amber-200 bg-amber-50{% endif %}"><p class="text-xs text-slate-500">खर्च शीर्षक नभएका</p><p class="text-xl font-bold {% if missing.econ %}text-amber-700{% else %}text-emerald-700{% endif %}">{{ missing.econ|to_nepali_number }}</p></div>
+  </div>
+  {% if missing.head or missing.econ %}<p class="text-sm text-amber-800 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2"><i class="fas fa-circle-info"></i> खाली कोठा Excel मा पनि खाली आउँछन्। बजेट उपशीर्षक योजनामा (बजेट → बजेट शीर्षक) र खर्च शीर्षक तलको तालिकामा कामको प्रकारअनुसार तोक्नुहोस्।</p>{% endif %}
+
+  <form method="post" class="card overflow-hidden" hx-boost="false">{% csrf_token %}<input type="hidden" name="fiscalyear" value="{{ fy.id }}">
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">कामको प्रकार → खर्च शीर्षक (आर्थिक संकेत)</h2>
+      <p class="text-xs text-slate-500">आफ्नो SuTRA मा प्रयोग हुने संकेत राख्नुहोस् (जस्तै पुँजीगत निर्माणका ३११… संकेत)। एकपटक राखेपछि हरेक वर्ष आफैँ लाग्छ।</p></div>
+    <div class="p-5 grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+      {% for c in cats %}<label class="text-sm text-slate-700">{{ c.name }}
+        {% if can_edit %}<input name="e{{ c.id }}" value="{{ c.econ_code }}" class="form-input mt-1" placeholder="जस्तै: 31151" inputmode="numeric">{% else %}<span class="block font-mono">{{ c.econ_code|default:"—" }}</span>{% endif %}</label>
+      {% empty %}<p class="text-sm text-slate-500">कामको प्रकार सूची खाली छ (सेटिङ → कामको प्रकार)।</p>{% endfor %}
+    </div>
+    {% if can_edit and cats %}<div class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex justify-end"><button class="btn-primary"><i class="fas fa-floppy-disk"></i> खर्च शीर्षक सुरक्षित गर्नुहोस्</button></div>{% endif %}
+  </form>
+
+  <section class="card overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100"><h2 class="font-semibold text-slate-700">झलक <span class="text-xs font-normal text-slate-500">(पहिलो ३० — सबै Excel मा)</span></h2></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-4 py-2 text-left font-medium">उपशीर्षक नं.</th><th class="px-2 py-2 text-left font-medium">कार्यक्रम / आयोजना</th>
+        <th class="px-2 py-2 text-left font-medium">खर्च शीर्षक</th><th class="px-2 py-2 text-left font-medium">स्रोत</th><th class="px-2 py-2 text-left font-medium">वडा</th><th class="px-2 py-2 text-right font-medium">रकम</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+      {% for p in rows %}<tr>
+        <td class="px-4 py-1.5 font-mono text-xs {% if not p.budget_head %}text-amber-600{% endif %}">{{ p.budget_head.code|default:"—" }}</td>
+        <td class="px-2 py-1.5">{{ p.name }}</td>
+        <td class="px-2 py-1.5 font-mono text-xs {% if not p.work_category.econ_code %}text-amber-600{% endif %}">{{ p.work_category.econ_code|default:"—" }}</td>
+        <td class="px-2 py-1.5 text-xs">{{ p.budget_type.name|default:"" }}</td>
+        <td class="px-2 py-1.5">{{ p.ward.name|default:""|to_nepali_number }}</td>
+        <td class="px-2 py-1.5 text-right">{{ p.budget|money:0 }}</td></tr>
+      {% empty %}<tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">यो आ.व.मा योजना छैन।</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+  <p class="text-xs text-slate-500">Excel मा दुई पाना: “कार्यक्रम” (हरेक योजना) र “सारांश” (उपशीर्षक र खर्च शीर्षकअनुसार जोड)। SuTRA मा आयात गर्नुअघि आफ्नो SuTRA को ढाँचासँग स्तम्भ मिलाउनुहोस्।</p>
+</div>
+{% endblock %}
